@@ -286,8 +286,9 @@ void os_message_loop(window *wnd)
 #ifdef _WIN32
 	HWND hwnd = (HWND)wnd->handler;
 	MSG msg = {};
-	while(GetMessage(&msg, hwnd, 0, 0))
+	while(GetMessage(&msg, nullptr, 0, 0))
 	{
+		if(msg.message == WM_QUIT) break;
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
 	}

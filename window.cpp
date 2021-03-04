@@ -33,7 +33,7 @@ void window::update()
 		os_update_window_size(this);
 	}
 	for(uint32 i = 0; i < bmp.width * bmp.height; i++)
-		bmp.data[i] = alpha_color(0, 255, 0, 255);
+		bmp.data[i] = alpha_color(220, 220, 220, 255);
 	fm.x = position.x;
 	fm.y = position.y;
 	fm.width = size.x;
