@@ -8,4 +8,3 @@ Also no system float/double types are used. Custom implementation for real numbe
 BSD 3
 # Contacts
 rshkurdalov@gmail.com<br>
-If you like my approach you can support project (card - 4441 1144 4900 4611)
