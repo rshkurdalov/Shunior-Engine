@@ -35,6 +35,7 @@
     <ClCompile Include="text_field.cpp" />
     <ClCompile Include="text_layout.cpp" />
     <ClCompile Include="time.cpp" />
+    <ClCompile Include="timer.cpp" />
     <ClCompile Include="ui_ext.cpp" />
     <ClCompile Include="window.cpp" />
   </ItemGroup>
@@ -46,9 +47,11 @@
     <ClInclude Include="frame_templates.h" />
     <ClInclude Include="os_api.h" />
     <ClInclude Include="real.h" />
+    <ClInclude Include="set.h" />
     <ClInclude Include="string.h" />
     <ClInclude Include="text_layout.h" />
     <ClInclude Include="time.h" />
+    <ClInclude Include="timer.h" />
     <ClInclude Include="ui_ext.h" />
     <ClInclude Include="ui_types.h" />
     <ClInclude Include="geometry.h" />

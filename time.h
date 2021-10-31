@@ -3,58 +3,58 @@
 
 struct nanoseconds
 {
-	uint64 value;
+	int64 value;
 
 	nanoseconds() {}
-	nanoseconds(uint64 value) : value(value) {}
+	nanoseconds(int64 value) : value(value) {}
 };
 
 struct microseconds
 {
-	uint64 value;
+	int64 value;
 
 	microseconds() {}
-	microseconds(uint64 value) : value(value) {}
+	microseconds(int64 value) : value(value) {}
 };
 
 struct milliseconds
 {
-	uint64 value;
+	int64 value;
 
 	milliseconds() {}
-	milliseconds(uint64 value) : value(value) {}
+	milliseconds(int64 value) : value(value) {}
 };
 
 struct seconds
 {
-	uint64 value;
+	int64 value;
 
 	seconds() {}
-	seconds(uint64 value) : value(value) {}
+	seconds(int64 value) : value(value) {}
 };
 
 struct minutes
 {
-	uint64 value;
+	int64 value;
 
 	minutes() {}
-	minutes(uint64 value) : value(value) {}
+	minutes(int64 value) : value(value) {}
 };
 
 struct hours
 {
-	uint64 value;
+	int64 value;
 
 	hours() {}
-	hours(uint64 value) : value(value) {}
+	hours(int64 value) : value(value) {}
 };
 
 struct days
 {
-	uint64 value;
+	int64 value;
 
 	days() {}
-	days(uint64 value) : value(value) {}
+	days(int64 value) : value(value) {}
 };
 
 nanoseconds &operator<<(nanoseconds &ns, microseconds mcs);

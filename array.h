@@ -1,21 +1,6 @@
 #pragma once
 #include "global_operators.h"
 
-template<typename value_type> struct key
-{
-	value_type key_value;
-
-	key(value_type value)
-	{
-		key_value = value;
-	}
-	
-	bool operator<(const key &value) const
-	{
-		return key_value < value.key_value;
-	}
-};
-
 template<typename value_type> struct array
 {
 	value_type *addr;

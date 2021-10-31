@@ -25,7 +25,6 @@ struct window
 	void open();
 	void close();
 	void hide();
-	void message_loop();
 };
 
 void window_mouse_click(frame *fm);
@@ -112,6 +111,8 @@ vector<uint32, 2> text_field_content_size(frame *fm, uint32 viewport_width, uint
 void text_field_render(frame *fm, vector<int32, 2> point, bitmap_processor *bp, bitmap *bmp);
 void text_field_mouse_click(frame *fm);
 void text_field_mouse_move(frame *fm);
+void text_field_focus_receive(frame *fm);
+void text_field_focus_loss(frame *fm);
 void text_field_mouse_wheel_rotate(frame *fm);
 void text_field_key_press(frame *fm);
 void text_field_char_input(frame *fm);

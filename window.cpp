@@ -33,7 +33,7 @@ void window::update()
 		os_update_window_size(this);
 	}
 	for(uint32 i = 0; i < bmp.width * bmp.height; i++)
-		bmp.data[i] = alpha_color(220, 220, 220, 255);
+		bmp.data[i] = alpha_color(235, 235, 235, 255);
 	fm.x = position.x;
 	fm.y = position.y;
 	fm.width = size.x;
@@ -44,6 +44,18 @@ void window::update()
 	layout->height = fm.height;
 	bitmap_processor bp;
 	layout->render(layout, vector<int32, 2>(fm.x, fm.y), &bp, &bmp);
+
+	/*geometry_path path;
+	path.move(vector<real, 2>(100.0r, 100.0r));
+	path.push_line(vector<real, 2>(200.0r, 100.0r));
+	path.push_elliptic_arc(vector<real, 2>(300.0r, 200.0r), 1.0r, 0.75r, 0.0r, 0.0r);
+	path.move(vector<real, 2>(300.0r, 300.0r));
+	path.push_elliptic_arc(vector<real, 2>(300.0r, 400.0r), 0.5r, 0.75r, 0.25r, 0.0r);
+	path.push_elliptic_arc(vector<real, 2>(300.0r, 300.0r), 0.5r, 0.25r, 0.75r, 0.0r);
+	bp.rasterization = rasterization_mode::outline;
+	bp.line_width = 6.0r;
+	bp.set_solid_color_brush(alpha_color(255, 0, 0, 255));
+	bp.render_path(path, &bmp);*/
 
 	/*geometry_path path;
 	path.move(vector<real, 2>(10.0r, 10.0r));
@@ -78,11 +90,6 @@ void window::close()
 void window::hide()
 {
 
-}
-
-void window::message_loop()
-{
-	os_message_loop(this);
 }
 
 frame *window_mouse_event_receiver(window *wnd, void (*mouse_callback)(frame *fm))

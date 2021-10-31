@@ -256,8 +256,8 @@ void outline_path(real width, geometry_path *path)
 				p3 = path->data.addr[i].p1;
 				v2 = vector_normal(p3 - p2);
 				v2 = width * vector<real, 2>(-v2.y, v2.x);
-				if(intersect_lines(j1, p2 + v1, p2 + v2, p3 + v2, &j3)
-					&& intersect_lines(j2, p2 - v1, p2 - v2, p3 - v2, &j4))
+				if(intersect_lines(j1, p2 + v1, p2 + v2, p3 + v2, &j3) && vector_length(j3 - p2) < 3.0r * width
+					&& intersect_lines(j2, p2 - v1, p2 - v2, p3 - v2, &j4) && vector_length(j4 - p2) < 3.0r * width)
 				{
 					outline_path.move(j3);
 					outline_path.push_line(j1);
@@ -273,7 +273,12 @@ void outline_path(real width, geometry_path *path)
 					outline_path.move(j2);
 					outline_path.push_line(j4);
 					if((p3.x - p2.x) * (p2.x - p1.x) + (p3.y - p2.y) * (p2.y - p1.y) < 0.0r)
+					{
+						outline_path.push_line(j3);
+						outline_path.move(j4);
+						outline_path.push_line(j3);
 						swap(&j3, &j4);
+					}
 				}
 			}
 		}
@@ -350,6 +355,7 @@ void bitmap_processor::render_path(geometry_path &path, bitmap *bmp)
 	array<real> s;
 	vector<real, 2> v, v1, v2, v3;
 	geometry_path transformed_path;
+	matrix<real, 3, 3> rotation;
 	matrix<real, 1, 3> p;
 	vector<real, 2> p1, p2, p3, p4;
 	if(path.data.size == 0) return;
@@ -389,6 +395,28 @@ void bitmap_processor::render_path(geometry_path &path, bitmap *bmp)
 				transformed_path.push_line(p3);
 			p2 = p3;
 		}
+		else
+		{
+			p = vector<real, 3>(path.data.addr[i].p1.x, path.data.addr[i].p1.y, 1.0r) * transform;
+			p2 = vector<real, 2>(p.m[0][0], p.m[0][1]);
+			tm = path.data.addr[i].end_angle;
+			if(path.data.addr[i].begin_angle >= path.data.addr[i].end_angle)
+				tm += 1.0r;
+			ts = (tm - path.data.addr[i].begin_angle) / (2.0r * 3.14r
+				* root(0.5r * (path.data.addr[i].rx * path.data.addr[i].rx + path.data.addr[i].ry * path.data.addr[i].ry), 2));
+			tm -= ts;
+			rotation = rotate_matrix(path.data.addr[i].rotation, path.data.addr[i].p2);
+			for(t = path.data.addr[i].begin_angle + ts; t <= tm; t += ts)
+			{
+				p4 = elliptic_arc_point(path.data.addr[i].p2, path.data.addr[i].rx, path.data.addr[i].ry, t);
+				p = vector<real, 3>(p4.x, p4.y, 1.0r) * rotation;
+				p4 = vector<real, 2>(p.m[0][0], p.m[0][1]);
+				if(transformed_path.data.size != 0 && transformed_path.data.addr[transformed_path.data.size - 1].p1 != p4)
+					transformed_path.push_line(p4);
+			}
+			if(transformed_path.data.size != 0 && transformed_path.data.addr[transformed_path.data.size - 1].p1 != p2)
+				transformed_path.push_line(p2);
+		}
 		p1 = p2;
 	}
 	if(rasterization == rasterization_mode::outline)
@@ -407,7 +435,7 @@ void bitmap_processor::render_path(geometry_path &path, bitmap *bmp)
 	x2 = hx.get_int32();
 	ly = floor(ly);
 	hy = ceil(hy);
-	ranges.insert_default(0, (uint64)(((hy - ly).integer + 1) * sublines));
+	ranges.insert_default(0, (uint64)((hy - ly).integer + 1) * sublines);
 	for(idx = 0; idx < transformed_path.data.size; idx++)
 	{
 		if(transformed_path.data.addr[idx].type == geometry_path_unit::move)
@@ -442,7 +470,6 @@ void bitmap_processor::render_path(geometry_path &path, bitmap *bmp)
 			&& (yb < scissor_stack.addr[scissor_stack.size - 1].position.y
 				|| yb >= scissor_stack.addr[scissor_stack.size - 1].position.y
 				+ scissor_stack.addr[scissor_stack.size - 1].extent.y)) continue;
-
 		for(j = 0; j < sublines; j++)
 		{
 			m = 0;

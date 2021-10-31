@@ -1,5 +1,15 @@
 #include "frame_templates.h"
+#include "timer.h"
 #include "os_api.h"
+
+bool caret_visible;
+timer_trigger_action caret_timer_callback(void *data)
+{
+	caret_visible = !caret_visible;
+	os_update_windows();
+	return timer_trigger_action::reactivate;
+}
+timer *caret_timer = nullptr;
 
 text_field::text_field()
 {
@@ -13,6 +23,8 @@ text_field::text_field()
 	fm.render = text_field_render;
 	fm.mouse_click = text_field_mouse_click;
 	fm.mouse_move = text_field_mouse_move;
+	fm.focus_receive = text_field_focus_receive;
+	fm.focus_loss = text_field_focus_loss;
 	fm.mouse_wheel_rotate = text_field_mouse_wheel_rotate;
 	fm.key_press = text_field_key_press;
 	fm.char_input = text_field_char_input;
@@ -168,7 +180,8 @@ void text_field_render_glyph(
 		args->bp->render_path(rect_path, bmp);
 		rect_path.data.clear();
 	}
-	if(focused_frame() == &args->tf->fm
+	if(caret_visible
+		&& focused_frame() == &args->tf->fm
 		&& args->tf->editable
 		&& (idx == args->tf->caret
 		|| idx == args->tf->caret - 1
@@ -268,7 +281,8 @@ void text_field_render(frame *fm, vector<int32, 2> point, bitmap_processor *bp, 
 		&args,
 		bmp);
 	bp->pop_scissor();
-	if(focused_frame() == &tf->fm
+	if(caret_visible
+		&& focused_frame() == &tf->fm
 		&& tf->editable
 		&& tf->tl.glyphs.size == 0)
 	{
@@ -328,6 +342,25 @@ void text_field_mouse_move(frame *fm)
 				&tf->caret);
 		}
 	}
+}
+
+void text_field_focus_receive(frame *fm)
+{
+	caret_visible = true;
+	if(caret_timer == nullptr)
+	{
+		caret_timer = new timer();
+		caret_timer->period = 0;
+		caret_timer->period << milliseconds(500);
+		caret_timer->callback = caret_timer_callback;
+	}
+	caret_timer->run();
+}
+
+void text_field_focus_loss(frame *fm)
+{
+	if(caret_timer != nullptr)
+		caret_timer->reset();
 }
 
 void text_field_mouse_wheel_rotate(frame *fm)

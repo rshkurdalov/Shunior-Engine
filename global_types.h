@@ -12,3 +12,18 @@ typedef char char8;
 typedef char16_t char16;
 typedef char32_t char32;
 typedef unsigned char byte;
+
+template<typename value_type> struct key
+{
+	value_type key_value;
+
+	key(value_type value)
+	{
+		key_value = value;
+	}
+	
+	bool operator<(const key &value) const
+	{
+		return key_value < value.key_value;
+	}
+};

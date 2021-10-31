@@ -81,7 +81,7 @@ void text_layout::update()
 				if(unknown_glyph == nullptr)
 				{
 					unknown_glyph = new glyph_data();
-					unknown_glyph->size = 72;
+					unknown_glyph->size = 0;
 					unknown_glyph->advance = vector<int32, 2>(0, 0);
 					unknown_glyph->ascent = 0;
 					unknown_glyph->descent = 0;

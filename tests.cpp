@@ -5,6 +5,7 @@
 #include "array.h"
 #include "frame.h"
 #include "frame_templates.h"
+#include "set.h"
 
 void test_array()
 {
@@ -150,6 +151,7 @@ void test_real()
 	l = e - a; // l = -9.24
 	l = root(4.0r, 2); // l = 2
 	l = root(80.0r, 2); // l = 8.944271909
+	l = root(100000000.0r, 8); // l = 10
 }
 
 void test_linear_algebra()
@@ -174,4 +176,31 @@ void test_linear_algebra()
 	r = root(9.0r, 2);
 	r = root(8.0r, 3);
 	r = root(800000.0r, 2);
+}
+
+void test_set()
+{
+	set<int32> s;
+	s.insert(1);
+	s.insert(2);
+	s.insert(3);
+	s.insert(3);
+	s.remove(key<int32>(3));
+
+	s.insert(3);
+	s.remove(2);
+
+	s.insert(2);
+	s.clear();
+
+	s.insert(2);
+	s.insert(0);
+	s.insert(1);
+
+	s.clear();
+	s.insert(1);
+	s.insert(2);
+	s.insert(3);
+	s.insert(0);
+	s.remove(2);
 }

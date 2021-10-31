@@ -3,6 +3,7 @@
 #include "vector.h"
 #include "matrix.h"
 #include "frame_templates.h"
+#include "os_api.h"
 #include <Windows.h>
 
 int __stdcall wWinMain(
@@ -15,9 +16,9 @@ int __stdcall wWinMain(
 	//test_string();
 	//test_vector();
 	//test_matrix();
-	//test_common();
 	//test_real();
 	//test_linear_algebra();
+	//test_set();
 
 	flow_layout fl, fl1;
 	text_field tf, tf1, tf2, tf3, tf4, tf5, tf6;
@@ -137,7 +138,8 @@ int __stdcall wWinMain(
 	wnd.layout = &fl.fm;
 	wnd.open();
 	wnd.update();
-	wnd.message_loop();
+
+	os_message_loop();
 
 	return 0;
 }

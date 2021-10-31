@@ -50,6 +50,7 @@ bool operator>=(real a, real b)
 
 real operator-(real value)
 {
+	if(value == undefined_real) return undefined_real;
 	return real(
 		value.integer,
 		value.fraction,
@@ -58,6 +59,7 @@ real operator-(real value)
 
 real operator+(real a, real b)
 {
+	if(a == undefined_real || b == undefined_real) return undefined_real;
 	if(a.negative == b.negative)
 	{
 		a.integer += b.integer;
@@ -107,6 +109,7 @@ real &operator-=(real &a, real b)
 
 real operator*(real a, real b)
 {
+	if(a == undefined_real || b == undefined_real) return undefined_real;
 	real c;
 	c.integer = a.integer * b.integer;
 	uint64 d = (uint64)a.integer * (uint64)b.fraction;
@@ -138,7 +141,7 @@ real &operator*=(real &a, real b)
 
 real operator/(real a, real b)
 {
-	if(b == 0) return -real(0, 0);
+	if(a == undefined_real || b == undefined_real || b == 0) return undefined_real;
 	uint64 c = a.integer, d = b.integer, e;
 	real r = 0;
 	for(uint32 i = 0, j = (max_real_fraction + 1) / 10; i < 9; i++, j /= 10)
@@ -224,11 +227,20 @@ real round(real value)
 real pow(real x, uint32 y)
 {
 	if(y == 1) return x;
-	real a = pow(x, y >> 1);
-	return (y & 1) ? x * a * a : a * a;
+	real a = pow(x, y >> 1), b = a * a;
+	if(a != 0.0r && abs(b / a - a) > 0.000000001r)
+		b = undefined_real;
+	else if(y & 1)
+	{
+		a = b;
+		b *= x;
+		if(x != 0.0r && abs(b / x - a) > 0.000000001r)
+			b = undefined_real;
+	}
+	return b;
 }
 
-real root(real x, uint32 y) //!!!
+real root(real x, uint32 y)
 {
 	if(y < 2)
 	{
@@ -239,7 +251,7 @@ real root(real x, uint32 y) //!!!
 		}
 		else return x;
 	}
-	real l, r, m;
+	real l, r, m, p;
 	if(x < 0)
 	{
 		l = min(x, -1.0r);
@@ -254,7 +266,8 @@ real root(real x, uint32 y) //!!!
 	{
 		m = 0.5r * (l + r);
 		if(l == m || r == m) break;
-		if(pow(m, y) < x) l = m;
+		p = pow(m, y);
+		if(p < x && p != undefined_real) l = m;
 		else r = m;
 	}
 	if(pow(r, y) <= x) return r;

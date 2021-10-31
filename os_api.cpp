@@ -3,6 +3,7 @@
 #include "array.h"
 #include "frame_templates.h"
 #include "hardware.h"
+#include "timer.h"
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -39,6 +40,35 @@ template<> struct key<window_data_win32>
 };
 
 array<window_data_win32> windows;
+
+UINT_PTR timer_id_win32 = 0;
+void __stdcall timer_proc_win32(HWND hwnd, UINT msg, UINT_PTR id, DWORD sys_time)
+{
+	set_node<timer *> *node;
+	timer *triggered_timer;
+	nanoseconds time = now();
+	timer_trigger_action postaction;
+	while(true)
+	{
+		node = timers()->begin();
+		if(node == nullptr || node->value->trigger_time.value > time.value) break;
+		triggered_timer = node->value;
+		postaction = triggered_timer->callback(triggered_timer->data);
+		timers()->remove(key<timer *>(triggered_timer));
+		if(postaction == timer_trigger_action::repeat)
+		{
+			triggered_timer->trigger_time.value += triggered_timer->period.value;
+			timers()->insert(triggered_timer);
+		}
+		else if(postaction == timer_trigger_action::reactivate)
+		{
+			triggered_timer->trigger_time = time.value + triggered_timer->period.value;
+			timers()->insert(triggered_timer);
+		}
+		else triggered_timer->state = timer_state::inactive;
+	}
+	os_update_internal_timer();
+}
 
 LRESULT CALLBACK wnd_proc_win32(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -211,6 +241,7 @@ void os_create_window(window *wnd)
 void os_destroy_window(window *wnd)
 {
 #ifdef _WIN32
+	//!!!
 	DestroyWindow((HWND)wnd->handler);
 	windows.binary_remove(key<window_data_win32>((HWND)wnd->fm.data));
 #endif
@@ -281,14 +312,17 @@ vector<uint32, 2> os_window_content_size(window *wnd)
 #endif
 }
 
-void os_message_loop(window *wnd)
+void os_message_loop()
 {
 #ifdef _WIN32
-	HWND hwnd = (HWND)wnd->handler;
 	MSG msg = {};
 	while(GetMessage(&msg, nullptr, 0, 0))
 	{
 		if(msg.message == WM_QUIT) break;
+		else if(msg.message == WM_TIMER)
+		{
+			msg = msg;
+		}
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
 	}
@@ -465,13 +499,13 @@ bool os_load_glyph(glyph_data *data)
 #endif
 }
 
-uint64 os_current_timestamp()
+int64 os_current_timestamp()
 {
 #ifdef _WIN32
 	int64 freq, counter;
 	QueryPerformanceFrequency((LARGE_INTEGER *)&freq);
 	QueryPerformanceCounter((LARGE_INTEGER *)&counter);
-	return (uint64)(((counter / freq) * 1000000000) + ((counter % freq) * 1000000000 / freq));
+	return (counter / freq) * 1000000000 + (counter % freq) * 1000000000 / freq;
 #endif
 }
 
@@ -507,5 +541,22 @@ void os_copy_text_from_clipboard(string *text)
 	}
 	CloseClipboard();
 #endif
+}
+
+void os_update_internal_timer()
+{
+#ifdef _WIN32
+	if(timers()->size == 0) return;
+	milliseconds ms = 0;
+	ms << nanoseconds(timers()->begin()->value->trigger_time.value - now().value);
+	if(ms.value < 0) ms.value = 0;
+	timer_id_win32 = SetTimer(NULL, timer_id_win32, (UINT)ms.value, timer_proc_win32);
+#endif
+}
+
+void os_update_windows()
+{
+	for(uint64 i = 0; i < windows.size; i++)
+		windows.addr[i].wnd->update();
 }
 
