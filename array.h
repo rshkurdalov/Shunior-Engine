@@ -27,12 +27,12 @@ template<typename value_type> struct array
 		if(capacity == 0) capacity = 6;
 		while(capacity < min_value) capacity <<= 1;
 		if(addr == nullptr)
-			addr = (value_type *)new byte[capacity * sizeof(value_type)];
+			addr = (value_type *)(new byte[capacity * sizeof(value_type)]);
 		else
 		{
-			value_type *target_addr = (value_type *)new byte[capacity * sizeof(value_type)];
+			value_type *target_addr = (value_type *)(new byte[capacity * sizeof(value_type)]);
 			copy_memory(addr, target_addr, size * sizeof(value_type));
-			delete[] (byte *)addr;
+			delete[] (byte *)(addr);
 			addr = target_addr;
 		}
 	}
@@ -101,7 +101,7 @@ template<typename value_type> struct array
 	{
 		if(addr == nullptr) return;
 		destroy_range(addr, addr + size);
-		delete[] (byte *)addr;
+		delete[] (byte *)(addr);
 		addr = nullptr;
 		size = 0;
 		capacity = 0;

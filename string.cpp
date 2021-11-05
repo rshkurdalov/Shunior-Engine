@@ -37,13 +37,13 @@ bool operator>(const string &value1, const string &value2)
 void operator<<(string &target, const char8 *source)
 {
 	for(uint64 i = 0; source[i] != '\0'; i++)
-		target.push((char32)source[i]);
+		target.push(char32(source[i]));
 }
 
 void operator<<(string &target, const char16 *source)
 {
 	for(uint64 i = 0; source[i] != u'\0'; i++)
-		target.push((char32)source[i]);
+		target.push(char32(source[i]));
 }
 
 void operator<<(string &target, const char32 *source)

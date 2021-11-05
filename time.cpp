@@ -33,7 +33,7 @@ nanoseconds &operator<<(nanoseconds &ns, hours h)
 
 nanoseconds &operator<<(nanoseconds &ns, days d)
 {
-	ns.value += (int64)24 * 60 * 60 * 1000 * 1000 * 1000;
+	ns.value += int64(24) * 60 * 60 * 1000 * 1000 * 1000;
 	return ns;
 }
 
@@ -147,7 +147,7 @@ seconds &operator<<(seconds &s, days d)
 
 minutes &operator<<(minutes &min, nanoseconds ns)
 {
-	min.value += ns.value / ((int64)1000 * 1000 * 1000 * 60);
+	min.value += ns.value / (int64(1000) * 1000 * 1000 * 60);
 	return min;
 }
 
@@ -183,13 +183,13 @@ minutes &operator<<(minutes &min, days d)
 
 hours &operator<<(hours &h, nanoseconds ns)
 {
-	h.value += ns.value / ((int64)1000 * 1000 * 1000 * 60 * 60);
+	h.value += ns.value / (int64(1000) * 1000 * 1000 * 60 * 60);
 	return h;
 }
 
 hours &operator<<(hours &h, microseconds mcs)
 {
-	h.value += mcs.value / ((int64)1000 * 1000 * 60 * 60);
+	h.value += mcs.value / (int64(1000) * 1000 * 60 * 60);
 	return h;
 }
 
@@ -219,13 +219,13 @@ hours &operator<<(hours &h, days d)
 
 days &operator<<(days &d, nanoseconds ns)
 {
-	d.value += ns.value / ((int64)1000 * 1000 * 1000 * 60 * 60 * 24);
+	d.value += ns.value / (int64(1000) * 1000 * 1000 * 60 * 60 * 24);
 	return d;
 }
 
 days &operator<<(days &d, microseconds mcs)
 {
-	d.value += mcs.value / ((int64)1000 * 1000 * 60 * 60 * 24);
+	d.value += mcs.value / (int64(1000) * 1000 * 60 * 60 * 24);
 	return d;
 }
 

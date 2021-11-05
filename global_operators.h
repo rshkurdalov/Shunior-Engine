@@ -279,9 +279,9 @@ compare_result compare_memory(void *addr1, void *addr2, uint64 size)
 {
 	while(size != 0)
 	{
-		if(*((stride_type *)addr1) != *((stride_type *)addr2))
+		if(*((stride_type *)(addr1)) != *((stride_type *)(addr2)))
 		{
-			if(*((stride_type *)addr1) < *((stride_type *)addr2))
+			if(*((stride_type *)(addr1)) < *((stride_type *)(addr2)))
 				return compare_result::less;
 			else return compare_result::greater;
 		}

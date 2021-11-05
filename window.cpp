@@ -150,7 +150,7 @@ frame *window_mouse_event_receiver(window *wnd, void (*mouse_callback)(frame *fm
 
 void window_mouse_click(frame *fm)
 {
-	window *wnd = (window *)fm->data;
+	window *wnd = (window *)(fm->data);
 	frame *receiver = window_mouse_event_receiver(wnd, window_mouse_click);
 	if(receiver->focusable) focus_frame(receiver);
 	else focus_frame(nullptr);
@@ -159,7 +159,7 @@ void window_mouse_click(frame *fm)
 
 void window_mouse_release(frame *fm)
 {
-	window *wnd = (window *)fm->data;
+	window *wnd = (window *)(fm->data);
 	frame *receiver = window_mouse_event_receiver(wnd, window_mouse_release);
 	receiver->mouse_release(receiver);
 	// !!!
@@ -167,7 +167,7 @@ void window_mouse_release(frame *fm)
 
 void window_mouse_move(frame *fm)
 {
-	window *wnd = (window *)fm->data;
+	window *wnd = (window *)(fm->data);
 	frame *receiver = window_mouse_event_receiver(wnd, window_mouse_move);
 	hover_frame(receiver);
 	receiver->mouse_move(receiver);
@@ -176,7 +176,7 @@ void window_mouse_move(frame *fm)
 
 void window_mouse_wheel_rotate(frame *fm)
 {
-	window *wnd = (window *)fm->data;
+	window *wnd = (window *)(fm->data);
 	frame *receiver = window_mouse_event_receiver(wnd, window_mouse_wheel_rotate);
 	receiver->mouse_wheel_rotate(receiver);
 }

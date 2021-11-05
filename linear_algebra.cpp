@@ -38,12 +38,12 @@ vector<real, 2> angle_normal(real value)
 
 real vector_angle(vector<real, 2> value)
 {
-	if(value.x == 0)
+	if(value.x == 0.0r)
 	{
 		if(value.y > 0.0r) return 0.25r;
 		else return 0.75r;
 	}
-	else if(value.y == 0)
+	else if(value.y == 0.0r)
 	{
 		if(value.x > 0.0r) return 0.0r;
 		else return 0.5r;

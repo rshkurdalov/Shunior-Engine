@@ -19,7 +19,7 @@ flow_layout::flow_layout()
 
 void flow_layout_subframes(frame *fm, array<frame *> *frames)
 {
-	flow_layout *fl = (flow_layout *)fm->data;
+	flow_layout *fl = (flow_layout *)(fm->data);
 	frames->push(&fl->xscroll.fm);
 	frames->push(&fl->yscroll.fm);
 	for(uint64 i = 0; i < fl->frames.size; i++)
@@ -96,7 +96,7 @@ void flow_layout_evaluate_metrics(flow_layout_metrics *metrics)
 			if(metrics->fl->multiline
 				&& i != end_idx
 				&& (flf->line_break
-					|| (uint32)flf->halign < (uint32)last_halign
+					|| uint32(flf->halign) < uint32(last_halign)
 					|| line.size1 + line.size2 + line.size3 + (int32)size.x > metrics->viewport_width))
 			{
 				line.frame_count = i - end_idx;
@@ -107,10 +107,10 @@ void flow_layout_evaluate_metrics(flow_layout_metrics *metrics)
 				line = flow_layout_line_metrics();
 			}
 			last_halign = flf->halign;
-			if(flf->halign == horizontal_align::left) line.size1 += (int32)size.x;
-			else if(flf->halign == horizontal_align::center) line.size2 += (int32)size.x;
-			else line.size3 += (int32)size.x;
-			line.linespace = max(line.linespace, (int32)size.y);
+			if(flf->halign == horizontal_align::left) line.size1 += int32(size.x);
+			else if(flf->halign == horizontal_align::center) line.size2 += int32(size.x);
+			else line.size3 += int32(size.x);
+			line.linespace = max(line.linespace, int32(size.y));
 		}
 		if(end_idx != metrics->fl->frames.size)
 		{
@@ -124,19 +124,19 @@ void flow_layout_evaluate_metrics(flow_layout_metrics *metrics)
 
 vector<uint32, 2> flow_layout_content_size(frame *fm, uint32 viewport_width, uint32 viewport_height)
 {
-	flow_layout *fl = (flow_layout *)fm->data;
+	flow_layout *fl = (flow_layout *)(fm->data);
 	flow_layout_metrics metrics(fl, viewport_width, viewport_height);
 	flow_layout_evaluate_metrics(&metrics);
-	if(metrics.content_width > (int32)viewport_width)
-		metrics.content_height += (int32)fl->xscroll.fm.height_desc.value.integer;
-	if(metrics.content_height > (int32)viewport_height)
-		metrics.content_width += (int32)fl->yscroll.fm.width_desc.value.integer;
+	if(metrics.content_width > int32(viewport_width))
+		metrics.content_height += int32(fl->xscroll.fm.height_desc.value);
+	if(metrics.content_height > int32(viewport_height))
+		metrics.content_width += int32(fl->yscroll.fm.width_desc.value);
 	return vector<uint32, 2>(metrics.content_width, metrics.content_height);
 }
 
 void flow_layout_update_layout(frame *fm)
 {
-	flow_layout *fl = (flow_layout *)fm->data;
+	flow_layout *fl = (flow_layout *)(fm->data);
 	rectangle<int32> viewport = frame_viewport(&fl->fm);
 	rectangle<int32> content_viewport = frame_content_viewport(&fl->fm);
 	flow_layout_metrics metrics(fl, content_viewport.extent.x, content_viewport.extent.y);
@@ -164,12 +164,12 @@ void flow_layout_update_layout(frame *fm)
 		metrics.content_height = 0;
 		metrics.line_metrics.clear();
 		flow_layout_evaluate_metrics(&metrics);
-		fl->xscroll.content_size = (uint32)metrics.content_width;
-		fl->xscroll.viewport_size = (uint32)metrics.viewport_width;
-		fl->yscroll.content_size = (uint32)metrics.content_height;
-		fl->yscroll.viewport_size = (uint32)metrics.viewport_height;
-		fl->xscroll.fm.width = (uint32)content_viewport.extent.x;
-		fl->yscroll.fm.height = (uint32)content_viewport.extent.y;
+		fl->xscroll.content_size = uint32(metrics.content_width);
+		fl->xscroll.viewport_size = uint32(metrics.viewport_width);
+		fl->yscroll.content_size = uint32(metrics.content_height);
+		fl->yscroll.viewport_size = uint32(metrics.viewport_height);
+		fl->xscroll.fm.width = uint32(content_viewport.extent.x);
+		fl->yscroll.fm.height = uint32(content_viewport.extent.y);
 		if(fl->xscroll.fm.visible && fl->yscroll.fm.visible)
 		{
 			fl->xscroll.fm.width -= fl->yscroll.fm.width;
@@ -178,9 +178,9 @@ void flow_layout_update_layout(frame *fm)
 		fl->xscroll.fm.x = content_viewport.position.x;
 		fl->xscroll.fm.y = content_viewport.position.y;
 		fl->yscroll.fm.x = content_viewport.position.x
-			+ content_viewport.extent.x - (int32)fl->yscroll.fm.width;
+			+ content_viewport.extent.x - int32(fl->yscroll.fm.width);
 		fl->yscroll.fm.y = content_viewport.position.y
-			+ content_viewport.extent.y - (int32)fl->yscroll.fm.height;
+			+ content_viewport.extent.y - int32(fl->yscroll.fm.height);
 	}
 	int32 offset1, offset2, offset3, fi = 0;
 	vector<uint32, 2> size;
@@ -224,25 +224,25 @@ void flow_layout_update_layout(frame *fm)
 				if(fl->frames.addr[fi].halign == horizontal_align::left)
 				{
 					fl->frames.addr[fi].fm->x = line_position.x + offset1;
-					offset1 += (int32)fl->frames.addr[fi].fm->width;
+					offset1 += int32(fl->frames.addr[fi].fm->width);
 				}
 				else if(fl->frames.addr[fi].halign == horizontal_align::center)
 				{
 					fl->frames.addr[fi].fm->x = line_position.x + offset2;
-					offset2 += (int32)fl->frames.addr[fi].fm->width;
+					offset2 += int32(fl->frames.addr[fi].fm->width);
 				}
 				else
 				{
 					fl->frames.addr[fi].fm->x = line_position.x + offset3;
-					offset3 += (int32)fl->frames.addr[fi].fm->width;
+					offset3 += int32(fl->frames.addr[fi].fm->width);
 				}
 				if(fl->frames.addr[fi].valign == vertical_align::top)
 					fl->frames.addr[fi].fm->y = line_position.y
 						+ metrics.line_metrics.addr[i].linespace
-						- (int32)fl->frames.addr[fi].fm->height;
+						- int32(fl->frames.addr[fi].fm->height);
 				else if(fl->frames.addr[fi].valign == vertical_align::center)
 					fl->frames.addr[fi].fm->y = line_position.y
-						+ (metrics.line_metrics.addr[i].linespace - (int32)fl->frames.addr[fi].fm->height) / 2;
+						+ (metrics.line_metrics.addr[i].linespace - int32(fl->frames.addr[fi].fm->height)) / 2;
 				else fl->frames.addr[fi].fm->y = line_position.y;
 			}
 			if(fl->offset == flow_offset::left)
@@ -253,7 +253,7 @@ void flow_layout_update_layout(frame *fm)
 
 void flow_layout_render(frame *fm, vector<int32, 2> point, bitmap_processor *bp, bitmap *bmp)
 {
-	flow_layout *fl = (flow_layout *)fm->data;
+	flow_layout *fl = (flow_layout *)(fm->data);
 	rectangle<int32> content_viewport = frame_content_viewport(&fl->fm);
 	content_viewport.position -= point;
 	if(!fl->fm.visible
@@ -270,13 +270,13 @@ void flow_layout_render(frame *fm, vector<int32, 2> point, bitmap_processor *bp,
 	else fl->yscroll.viewport_offset = 0;
 	for(uint64 i = 0; i < fl->frames.size; i++)
 	{
-		fl->frames.addr[i].fm->x -= (int32)fl->xscroll.viewport_offset;
-		fl->frames.addr[i].fm->y += (int32)fl->yscroll.viewport_offset;
+		fl->frames.addr[i].fm->x -= int32(fl->xscroll.viewport_offset);
+		fl->frames.addr[i].fm->y += int32(fl->yscroll.viewport_offset);
 		if(fl->frames.addr[i].fm->x < point.x + content_viewport.position.x + content_viewport.extent.x
-			&& fl->frames.addr[i].fm->x + (int32)fl->frames.addr[i].fm->width
+			&& fl->frames.addr[i].fm->x + int32(fl->frames.addr[i].fm->width)
 			>= point.x + content_viewport.position.x
 			&& fl->frames.addr[i].fm->y < point.y + content_viewport.position.y + content_viewport.extent.y
-			&& fl->frames.addr[i].fm->y + (int32)fl->frames.addr[i].fm->height
+			&& fl->frames.addr[i].fm->y + int32(fl->frames.addr[i].fm->height)
 			>= point.y + content_viewport.position.y)
 			fl->frames.addr[i].fm->render(fl->frames.addr[i].fm, point, bp, bmp);
 	}
@@ -287,7 +287,7 @@ void flow_layout_render(frame *fm, vector<int32, 2> point, bitmap_processor *bp,
 
 void flow_layout_mouse_wheel_rotate(frame *fm)
 {
-	flow_layout *fl = (flow_layout *)fm->data;
+	flow_layout *fl = (flow_layout *)(fm->data);
 	if(fl->yscroll.fm.visible)
 		fl->yscroll.shift(50, mouse()->wheel_forward);
 	else fl->xscroll.shift(50, mouse()->wheel_forward);

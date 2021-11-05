@@ -104,5 +104,6 @@ struct bitmap_processor
 	void set_bitmap_brush(bitmap *source_bitmap, matrix<real, 3, 3> &bitmap_transform_matrix);
 	alpha_color point_color(uint32 x, uint32 y);
 	void render(geometry_path &path, bitmap *bmp);
+	void fill_bitmap(bitmap &source, vector<int32, 2> target_point, bitmap *target);
 	void fill_opacity_bitmap(bitmap &source, vector<int32, 2> target_point, bitmap *target);
 };

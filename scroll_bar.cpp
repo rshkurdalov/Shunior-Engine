@@ -34,7 +34,7 @@ void scroll_bar::shift(uint32 value, bool forward)
 
 void scroll_bar_render(frame *fm, vector<int32, 2> point, bitmap_processor *bp, bitmap *bmp)
 {
-	scroll_bar *sb = (scroll_bar *)fm->data;
+	scroll_bar *sb = (scroll_bar *)(fm->data);
 	if(!sb->fm.visible || sb->viewport_size >= sb->content_size) return;
 	rectangle<int32> content_viewport = frame_content_viewport(&sb->fm);
 	sb->viewport_offset = min(sb->viewport_offset, sb->content_size - sb->viewport_size);

@@ -84,7 +84,7 @@ LRESULT CALLBACK wnd_proc_win32(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
 			GetCursorPos(&point);
 			mouse()->prev_position = mouse()->position;
 			mouse()->position = vector<int32, 2>(
-				(int32)point.x, (int32)(GetSystemMetrics(SM_CYSCREEN) - 1) - (int32)point.y);
+				int32(point.x), int32(GetSystemMetrics(SM_CYSCREEN) - 1) - int32(point.y));
 			wnd->fm.mouse_move(&wnd->fm);
 			wnd->update();
 			break;
@@ -129,10 +129,10 @@ LRESULT CALLBACK wnd_proc_win32(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
 		}
 		case WM_KEYDOWN:
 		{
-			keyboard()->last_pressed = (key_code)wParam;
-			if(!keyboard()->key_pressed[(uint8)keyboard()->last_pressed])
+			keyboard()->last_pressed = key_code(wParam);
+			if(!keyboard()->key_pressed[uint8(keyboard()->last_pressed)])
 			{
-				keyboard()->key_pressed[(uint8)keyboard()->last_pressed] = true;
+				keyboard()->key_pressed[uint8(keyboard()->last_pressed)] = true;
 				keyboard()->pressed_count++;
 			}
 			wnd->fm.key_press(&wnd->fm);
@@ -141,10 +141,10 @@ LRESULT CALLBACK wnd_proc_win32(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
 		}
 		case WM_KEYUP:
 		{
-			keyboard()->last_released = (key_code)wParam;
-			if(keyboard()->key_pressed[(uint8)keyboard()->last_released])
+			keyboard()->last_released = key_code(wParam);
+			if(keyboard()->key_pressed[uint8(keyboard()->last_released)])
 			{
-				keyboard()->key_pressed[(uint8)keyboard()->last_released] = false;
+				keyboard()->key_pressed[uint8(keyboard()->last_released)] = false;
 				keyboard()->pressed_count--;
 			}
 			wnd->fm.key_release(&wnd->fm);
@@ -153,7 +153,7 @@ LRESULT CALLBACK wnd_proc_win32(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
 		}
 		case WM_CHAR:
 		{ 
-			keyboard()->char_code = (char32)wParam;
+			keyboard()->char_code = char32(wParam);
 			wnd->fm.char_input(&wnd->fm);
 			wnd->update();
 			break;
@@ -211,8 +211,8 @@ void os_create_window(window *wnd)
 		WS_OVERLAPPEDWINDOW,
 		CW_USEDEFAULT,
 		CW_USEDEFAULT,
-		(LONG)wnd->fm.width_desc.value.integer,
-		(LONG)wnd->fm.height_desc.value.integer,
+		(LONG)(wnd->fm.width_desc.value.integer),
+		(LONG)(wnd->fm.height_desc.value.integer),
 		nullptr,  
 		nullptr,
 		GetModuleHandleW(nullptr),
@@ -232,8 +232,8 @@ void os_create_window(window *wnd)
 	bitmap_info.bmiHeader.biClrImportant = 0;
 	HDC hdc = CreateCompatibleDC(GetDC(hwnd));
 	uint8 *bits;
-	HBITMAP hbitmap = CreateDIBSection(hdc, &bitmap_info, DIB_RGB_COLORS, (void **)&bits, NULL, NULL);
-	wnd->handler = (void *)hwnd;
+	HBITMAP hbitmap = CreateDIBSection(hdc, &bitmap_info, DIB_RGB_COLORS, (void **)(&bits), NULL, NULL);
+	wnd->handler = (void *)(hwnd);
 	windows.binary_insert(window_data_win32(hwnd, hbitmap, hdc, bits, wnd));
 #endif
 }
@@ -242,7 +242,7 @@ void os_destroy_window(window *wnd)
 {
 #ifdef _WIN32
 	//!!!
-	DestroyWindow((HWND)wnd->handler);
+	DestroyWindow(HWND(wnd->handler));
 	windows.binary_remove(key<window_data_win32>((HWND)wnd->fm.data));
 #endif
 }
@@ -250,9 +250,9 @@ void os_destroy_window(window *wnd)
 void os_open_window(window *wnd)
 {
 #ifdef _WIN32
-	ShowWindow((HWND)wnd->handler, SW_SHOW);
-	SetForegroundWindow((HWND)wnd->handler);
-	SetFocus((HWND)wnd->handler);
+	ShowWindow(HWND(wnd->handler), SW_SHOW);
+	SetForegroundWindow(HWND(wnd->handler));
+	SetFocus(HWND(wnd->handler));
 #endif
 }
 
@@ -260,7 +260,7 @@ void os_resize_window(window *wnd, uint32 width, uint32 height)
 {
 #ifdef _WIN32
 	SetWindowPos(
-		(HWND)wnd->handler,
+		HWND(wnd->handler),
 		nullptr,
 		0,
 		0,
@@ -274,8 +274,8 @@ void os_update_window_size(window *wnd)
 {
 #ifdef _WIN32
 	RECT rect;
-	GetClientRect((HWND)wnd->handler, &rect);
-	window_data_win32 *data = &windows.addr[windows.binary_search(key<window_data_win32>((HWND)wnd->handler))];
+	GetClientRect(HWND(wnd->handler), &rect);
+	window_data_win32 *data = &windows.addr[windows.binary_search(key<window_data_win32>(HWND(wnd->handler)))];
 	DeleteObject(data->bmp);
 	BITMAPINFO bitmap_info;
 	bitmap_info.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
@@ -288,7 +288,7 @@ void os_update_window_size(window *wnd)
 		= bitmap_info.bmiHeader.biWidth * bitmap_info.bmiHeader.biHeight * 4;
 	bitmap_info.bmiHeader.biClrUsed = 0;
 	bitmap_info.bmiHeader.biClrImportant = 0;
-	data->bmp = CreateDIBSection(data->dc, &bitmap_info, DIB_RGB_COLORS, (void **)&data->bits, NULL, NULL);
+	data->bmp = CreateDIBSection(data->dc, &bitmap_info, DIB_RGB_COLORS, (void **)(&data->bits), NULL, NULL);
 #endif
 }
 
@@ -296,8 +296,8 @@ vector<int32, 2> os_window_content_position(window *wnd)
 {
 	POINT point;
 	point.x = 0;
-	point.y = (LONG)wnd->fm.height;
-	ClientToScreen((HWND)wnd->handler, &point);
+	point.y = (LONG)(wnd->fm.height);
+	ClientToScreen((HWND)(wnd->handler), &point);
 	return vector<int32, 2>((int32)point.x, (int32)(GetSystemMetrics(SM_CYSCREEN) - 1 - point.y));
 }
 
@@ -305,10 +305,10 @@ vector<uint32, 2> os_window_content_size(window *wnd)
 {
 #ifdef _WIN32
 	RECT rect;
-	GetClientRect((HWND)wnd->handler, &rect);
+	GetClientRect(HWND(wnd->handler), &rect);
 	return vector<uint32, 2>(
-		(uint32)(rect.right - rect.left),
-		(uint32)(rect.bottom - rect.top));
+		uint32(rect.right - rect.left),
+		uint32(rect.bottom - rect.top));
 #endif
 }
 
@@ -357,7 +357,7 @@ bool os_load_glyph(glyph_data *data)
 	array<char16> str_win32;
 	str_win32.insert_default(0, data->font_name.size + 1);
 	for(uint64 i = 0; i < data->font_name.size; i++)
-		str_win32.addr[i] = (char16)data->font_name.addr[i];
+		str_win32.addr[i] = char16(data->font_name.addr[i]);
 	HFONT hfont = CreateFont(
 		data->size,
 		0,
@@ -380,19 +380,19 @@ bool os_load_glyph(glyph_data *data)
 	GetTextMetrics(hdc, &tm);
 	LPOUTLINETEXTMETRICW otm;
 	uint32 bufferSize = GetOutlineTextMetrics(hdc, 0, nullptr);
-	otm = (LPOUTLINETEXTMETRIC)new uint8[bufferSize];
+	otm = LPOUTLINETEXTMETRIC(new uint8[bufferSize]);
 	GetOutlineTextMetrics(hdc, bufferSize, otm);
-	data->ascent = (uint32)tm.tmAscent;
-	data->descent = (uint32)tm.tmDescent;
-	data->internal_leading = (uint32)tm.tmInternalLeading;
+	data->ascent = uint32(tm.tmAscent);
+	data->descent = uint32(tm.tmDescent);
+	data->internal_leading = uint32(tm.tmInternalLeading);
 	data->underline_offset = otm->otmsUnderscorePosition;
-	data->underline_size = (uint32)otm->otmsUnderscoreSize;
+	data->underline_size = uint32(otm->otmsUnderscoreSize);
 	data->strikethrough_offset = otm->otmsStrikeoutPosition;
-	data->strikethrough_size = (uint32)otm->otmsStrikeoutSize;
+	data->strikethrough_size = uint32(otm->otmsStrikeoutSize);
 	delete[] otm;
 	if(data->code == U'\t')
 	{
-		data->advance = vector<int32, 2>(2 * (int32)data->size, 0);
+		data->advance = vector<int32, 2>(2 * int32(data->size), 0);
 		DeleteDC(hdc);
 		return true;
 	}
@@ -408,15 +408,15 @@ bool os_load_glyph(glyph_data *data)
 		real result;
 		if(value.value < 0)
 		{
-			result.integer = (uint32)(-value.value);
+			result.integer = uint32(-value.value);
 			result.negative = true;
 		}
 		else
 		{
-			result.integer = (uint32)value.value;
+			result.integer = uint32(value.value);
 			result.negative = false;
 		}
-		result.fraction = (uint32)((uint64)value.fract * max_real_fraction / 65535);
+		result.fraction = uint32(uint64(value.fract) * max_real_fraction / 65535);
 		return result;
 	};
 	SelectObject(hdc, hfont);
@@ -449,14 +449,14 @@ bool os_load_glyph(glyph_data *data)
 	vector<real, 2> last_move;
 	while((uint8 *)polygon < outline.addr + outline.size)
 	{
-		contour_end = (uint8 *)polygon + polygon->cb;
+		contour_end = (uint8 *)(polygon) + polygon->cb;
 		data->path.move(vector<real, 2>(
 			fixed_to_real(polygon->pfxStart.x),
 			fixed_to_real(polygon->pfxStart.y)));
 		last_move = data->path.data.addr[data->path.data.size - 1].p1;
 		polygon++;
-		curve = (TTPOLYCURVE *)polygon;
-		while((uint8 *)curve < contour_end)
+		curve = (TTPOLYCURVE *)(polygon);
+		while((uint8 *)(curve) < contour_end)
 		{
 			if(curve->wType == TT_PRIM_LINE)
 			{
@@ -488,10 +488,9 @@ bool os_load_glyph(glyph_data *data)
 			curve = (TTPOLYCURVE *)(&curve->apfx[curve->cpfx]);
 		}
 		data->path.push_line(last_move);
-		polygon = (TTPOLYGONHEADER *)curve;
+		polygon = (TTPOLYGONHEADER *)(curve);
 	}
 	data->path.orientation = face_orientation::clockwise;
-
 	if(data->path.data.size != 0)
 	{
 		real lx = max_real, hx = min_real, ly = max_real, hy = min_real;
@@ -521,9 +520,8 @@ bool os_load_glyph(glyph_data *data)
 		bp.render(data->path, &data->bmp);
 		data->bmp_offset = vector<real, 2>(lx, ly);
 	}
-
-	data->advance.x = (int32)glyph_metrics.gmCellIncX;
-	data->advance.y = (int32)glyph_metrics.gmCellIncY;
+	data->advance.x = int32(glyph_metrics.gmCellIncX);
+	data->advance.y = int32(glyph_metrics.gmCellIncY);
 	DeleteDC(hdc);
 	return true;
 #endif
@@ -533,8 +531,8 @@ int64 os_current_timestamp()
 {
 #ifdef _WIN32
 	int64 freq, counter;
-	QueryPerformanceFrequency((LARGE_INTEGER *)&freq);
-	QueryPerformanceCounter((LARGE_INTEGER *)&counter);
+	QueryPerformanceFrequency((LARGE_INTEGER *)(&freq));
+	QueryPerformanceCounter((LARGE_INTEGER *)(&counter));
 	return (counter / freq) * 1000000000 + (counter % freq) * 1000000000 / freq;
 #endif
 }
@@ -546,9 +544,9 @@ void os_copy_text_to_clipboard(string &text)
 	HGLOBAL hglbCopy = GlobalAlloc(
 		GMEM_MOVEABLE,
 		(text.size + 1) * sizeof(char16));
-	char16 *str_win32 = (char16 *)GlobalLock(hglbCopy);
+	char16 *str_win32 = (char16 *)(GlobalLock(hglbCopy));
 	for(uint64 i = 0; i < text.size; i++)
-		str_win32[i] = (char16)text.addr[i];
+		str_win32[i] = char16(text.addr[i]);
 	str_win32[text.size] = u'\0';
 	GlobalUnlock(hglbCopy);
 	SetClipboardData(CF_UNICODETEXT, hglbCopy);
@@ -564,7 +562,7 @@ void os_copy_text_from_clipboard(string *text)
 	HGLOBAL hglb = GetClipboardData(CF_UNICODETEXT);
 	if(hglb != nullptr)
 	{
-		char16 *buffer = (char16 *)GlobalLock(hglb);
+		char16 *buffer = (char16 *)(GlobalLock(hglb));
 		if(buffer != nullptr)
 			*text << buffer;
 		GlobalUnlock(hglb);

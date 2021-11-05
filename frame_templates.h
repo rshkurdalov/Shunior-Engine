@@ -86,9 +86,8 @@ void flow_layout_update_layout(frame *fm);
 void flow_layout_render(frame *fm, vector<int32, 2> point, bitmap_processor *bp, bitmap *bmp);
 void flow_layout_mouse_wheel_rotate(frame *fm);
 
-struct text_field
+struct text_field_data
 {
-	frame fm;
 	string font;
 	uint32 font_size;
 	text_layout tl;
@@ -98,13 +97,34 @@ struct text_field
 	bool editable;
 	scroll_bar scroll;
 
-	text_field();
+	void attach(frame *fm);
 	void select(uint64 idx_begin, uint64 idx_end);
 	void deselect(uint64 return_idx);
 	void insert(string &text);
 	void remove();
-	void scroll_to_caret();
+	void scroll_to_caret(frame *fm);
+	void subframes(frame *fm, array<frame *> *frames);
+	vector<uint32, 2> content_size(frame *fm, uint32 viewport_width, uint32 viewport_height);
+	void render(frame *fm, vector<int32, 2> point, bitmap_processor *bp, bitmap *bmp);
+	void mouse_click(frame *fm);
+	void mouse_move(frame *fm);
+	void focus_receive(frame *fm);
+	void focus_loss(frame *fm);
+	void mouse_wheel_rotate(frame *fm);
+	void key_press(frame *fm);
+	void char_input(frame *fm);
 };
+
+
+struct text_field_model
+{
+	bitmap surface;
+	vector<uint32, 2> rendered_size;
+
+	void attach(frame *fm);
+	void render(frame *fm, text_field_data *data, vector<int32, 2> point, bitmap_processor *bp, bitmap *bmp);
+};
+
 
 void text_field_subframes(frame *fm, array<frame *> *frames);
 vector<uint32, 2> text_field_content_size(frame *fm, uint32 viewport_width, uint32 viewport_height);
@@ -116,3 +136,12 @@ void text_field_focus_loss(frame *fm);
 void text_field_mouse_wheel_rotate(frame *fm);
 void text_field_key_press(frame *fm);
 void text_field_char_input(frame *fm);
+
+struct text_field
+{
+	frame fm;
+	text_field_data data;
+	text_field_model model;
+
+	text_field();
+};

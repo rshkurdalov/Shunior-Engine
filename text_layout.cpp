@@ -174,7 +174,7 @@ void text_layout::hit_test_position(uint64 idx, vector<int32, 2> *point, int32 *
 		if(i == glyphs.size
 			|| multiline
 			&& (glyphs.addr[i].code == U'\n'
-				|| line_width + real(glyphs.addr[i].data->advance.x) > width))
+				|| line_width + glyphs.addr[i].data->advance.x > int32(width)))
 		{
 			if(i == glyphs.size)
 				line_end = i;
@@ -254,7 +254,7 @@ void text_layout::hit_test_point(vector<int32, 2> point, uint64 *idx)
 		if(i == glyphs.size
 			|| multiline
 			&& (glyphs.addr[i].code == U'\n'
-				|| line_width + real(glyphs.addr[i].data->advance.x) > width))
+				|| line_width + glyphs.addr[i].data->advance.x > int32(width)))
 		{
 			if(i == glyphs.size)
 				line_end = i;
@@ -288,7 +288,7 @@ void text_layout::hit_test_point(vector<int32, 2> point, uint64 *idx)
 			{
 				for(i = line_begin; i < line_end; i++)
 				{
-					if(point.x < p.x + 0.5r * real(glyphs.addr[i].data->advance.x))
+					if(point.x < p.x + glyphs.addr[i].data->advance.x / 2)
 					{
 						*idx = i;
 						return;
@@ -341,7 +341,7 @@ void text_layout::render(
 		if(i == glyphs.size
 			|| multiline
 			&& (glyphs.addr[i].code == U'\n'
-				|| line_width + real(glyphs.addr[i].data->advance.x) > width))
+				|| line_width + glyphs.addr[i].data->advance.x > int32(width)))
 		{
 			if(i == glyphs.size)
 				line_end = i;

@@ -112,18 +112,18 @@ real operator*(real a, real b)
 	if(a == undefined_real || b == undefined_real) return undefined_real;
 	real c;
 	c.integer = a.integer * b.integer;
-	uint64 d = (uint64)a.integer * (uint64)b.fraction;
-	c.integer += (uint32)(d / (max_real_fraction + 1));
-	c.fraction = (uint32)(d % (max_real_fraction + 1));
-	d = (uint64)a.fraction * (uint64)b.integer;
-	c.integer += (uint32)(d / (max_real_fraction + 1));
-	c.fraction += (uint32)(d % (max_real_fraction + 1));
+	uint64 d = uint64(a.integer) * uint64(b.fraction);
+	c.integer += uint32(d / (max_real_fraction + 1));
+	c.fraction = uint32(d % (max_real_fraction + 1));
+	d = uint64(a.fraction) * uint64(b.integer);
+	c.integer += uint32(d / (max_real_fraction + 1));
+	c.fraction += uint32(d % (max_real_fraction + 1));
 	if(c.fraction > max_real_fraction)
 	{
 		c.fraction -= (max_real_fraction + 1);
 		c.integer++;
 	}
-	c.fraction += (uint32)((uint64)a.fraction * (uint64)b.fraction / (uint64)(max_real_fraction + 1));
+	c.fraction += uint32(uint64(a.fraction) * uint64(b.fraction) / uint64(max_real_fraction + 1));
 	if(c.fraction > max_real_fraction)
 	{
 		c.fraction -= (max_real_fraction + 1);
@@ -141,7 +141,7 @@ real &operator*=(real &a, real b)
 
 real operator/(real a, real b)
 {
-	if(a == undefined_real || b == undefined_real || b == 0) return undefined_real;
+	if(a == undefined_real || b == undefined_real || b == real(0)) return undefined_real;
 	uint64 c = a.integer, d = b.integer, e;
 	real r = 0;
 	for(uint32 i = 0, j = (max_real_fraction + 1) / 10; i < 9; i++, j /= 10)
@@ -151,11 +151,11 @@ real operator/(real a, real b)
 		d = d * 10 + b.fraction / j;
 		b.fraction -= (b.fraction / j) * j;
 	}
-	r.integer = (uint32)(c / d);
+	r.integer = uint32(c / d);
 	e = (c % d) * 10;
 	for(uint32 i = 0; i < 9; i++)
 	{
-		r.fraction = r.fraction * 10 + e / d;
+		r.fraction = r.fraction * 10 + uint32(e / d);
 		e = (e % d) * 10;
 	}
 	r.negative = a.negative != b.negative && (r.integer != 0 || r.fraction != 0);
@@ -252,15 +252,15 @@ real root(real x, uint32 y)
 		else return x;
 	}
 	real l, r, m, p;
-	if(x < 0)
+	if(x < 0.0r)
 	{
 		l = min(x, -1.0r);
-		r = 0;
+		r = 0.0r;
 	}
 	else
 	{
-		l = 0;
-		r = max(x, 1);
+		l = 0.0r;
+		r = max(x, 1.0r);
 	}
 	while(true)
 	{

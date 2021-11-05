@@ -25,12 +25,12 @@ uint32 resolve_ui_size(ui_size size, uint32 related_size)
 rectangle<int32> frame_viewport(frame *fm)
 {
 	rectangle<int32> rect;
-	rect.position.x = fm->x + (int32)resolve_ui_size(fm->margin_left, fm->width);
-	rect.position.y = fm->y + (int32)resolve_ui_size(fm->margin_bottom, fm->height);
+	rect.position.x = fm->x + int32(resolve_ui_size(fm->margin_left, fm->width));
+	rect.position.y = fm->y + int32(resolve_ui_size(fm->margin_bottom, fm->height));
 	rect.extent.x = fm->width - (rect.position.x - fm->x)
-		- (int32)resolve_ui_size(fm->margin_right, fm->width);
+		- int32(resolve_ui_size(fm->margin_right, fm->width));
 	rect.extent.y = fm->height - (rect.position.y - fm->y)
-		- (int32)resolve_ui_size(fm->margin_top, fm->height);
+		- int32(resolve_ui_size(fm->margin_top, fm->height));
 	return rect;
 }
 
@@ -38,17 +38,17 @@ rectangle<int32> frame_content_viewport(frame *fm)
 {
 	rectangle<int32> rect;
 	rect.position.x = fm->x
-		+ (int32)resolve_ui_size(fm->margin_left, fm->width)
-		+ (int32)resolve_ui_size(fm->padding_left, fm->width);
+		+ int32(resolve_ui_size(fm->margin_left, fm->width))
+		+ int32(resolve_ui_size(fm->padding_left, fm->width));
 	rect.position.y = fm->y
-		+ (int32)resolve_ui_size(fm->margin_bottom, fm->height)
-		+ (int32)resolve_ui_size(fm->padding_bottom, fm->height);
+		+ int32(resolve_ui_size(fm->margin_bottom, fm->height))
+		+ int32(resolve_ui_size(fm->padding_bottom, fm->height));
 	rect.extent.x = fm->width - (rect.position.x - fm->x)
-		- (int32)resolve_ui_size(fm->margin_right, fm->width)
-		- (int32)resolve_ui_size(fm->padding_right, fm->width);
+		- int32(resolve_ui_size(fm->margin_right, fm->width))
+		- int32(resolve_ui_size(fm->padding_right, fm->width));
 	rect.extent.y = fm->height - (rect.position.y - fm->y)
-		- (int32)resolve_ui_size(fm->margin_top, fm->height)
-		- (int32)resolve_ui_size(fm->padding_top, fm->height);
+		- int32(resolve_ui_size(fm->margin_top, fm->height))
+		- int32(resolve_ui_size(fm->padding_top, fm->height));
 	return rect;
 }
 
@@ -138,8 +138,8 @@ void frame_global_subframes(frame *fm, array<frame *> *frames)
 
 bool frame_hit_test_def(frame *fm, vector<int32, 2> point)
 {
-	return point.x >= fm->x && point.x < fm->x + (int32)fm->width
-		&& point.y >= fm->y && point.y < fm->y + (int32)fm->height;
+	return point.x >= fm->x && point.x < fm->x + int32(fm->width)
+		&& point.y >= fm->y && point.y < fm->y + int32(fm->height);
 }
 
 void frame_subframes_def(frame *fm, array<frame *> *frames)
@@ -150,7 +150,7 @@ void frame_subframes_def(frame *fm, array<frame *> *frames)
 vector<uint32, 2> frame_content_size_def(frame *fm, uint32 viewport_width, uint32 viewport_height)
 {
 	rectangle<int32> size = frame_content_viewport(fm);
-	return vector<uint32, 2>((uint32)size.extent.x, (uint32)size.extent.y);
+	return vector<uint32, 2>(uint32(size.extent.x), uint32(size.extent.y));
 }
 
 void frame_render_def(frame *fm, vector<int32, 2> point, bitmap_processor *bp, bitmap *bmp)

@@ -121,10 +121,10 @@ alpha_color bitmap_processor::point_color(uint32 x, uint32 y)
 	{
 		matrix<real, 1, 3> mp = vector<real, 3>(real(x) + 0.5r, real(y) + 0.5r, 1.0r) * reverse_transform;
 		vector<real, 2> p = vector<real, 2>(mp.m[0][0], mp.m[0][1]);
-		int32 bx = round(p.x).get_int32(), by = round(p.y).get_int32();
-		if(bx < 0 || bx >= (int32)bitmap_addr->width || by < 0 || by >= (int32)bitmap_addr->height)
+		int32 bx = int32(round(p.x)), by = int32(round(p.y));
+		if(bx < 0 || bx >= int32(bitmap_addr->width) || by < 0 || by >= int32(bitmap_addr->height))
 			return alpha_color(0, 0, 0, 0);
-		return bitmap_addr->data[(bitmap_addr->height - 1 - (uint32)by) * bitmap_addr->width + (uint32)bx];
+		return bitmap_addr->data[(bitmap_addr->height - 1 - uint32(by)) * bitmap_addr->width + uint32(bx)];
 	}
 	else
 	{
@@ -158,7 +158,7 @@ alpha_color bitmap_processor::point_color(uint32 x, uint32 y)
 					p2.y = -a;
 					a = (sample.y - v2.y) * (p1.y - v2.y);
 					b = (sample.y - v2.y) * (p2.y - v2.y);
-					if(a < 0 && b < 0) hasColor = false;
+					if(a < 0.0r && b < 0.0r) hasColor = false;
 					else
 					{
 						if(a < 0.0r || b >= 0.0r && a < b) swap(&p1, &p2);
@@ -209,15 +209,15 @@ alpha_color bitmap_processor::point_color(uint32 x, uint32 y)
 				real w = (grad - gradients.addr[j - 1].offset)
 					/ (gradients.addr[j].offset - gradients.addr[j - 1].offset);
 				if(color_interpolation == color_interpolation_mode::smooth)
-					w = w * w * (3 - 2 * w);
-				color.r = (uint8)round(gradients.addr[j - 1].color.r * (1 - w)
-					+ gradients.addr[j].color.r * w).integer;
-				color.g = (uint8)round(gradients.addr[j - 1].color.g * (1 - w)
-					+ gradients.addr[j].color.g * w).integer;
-				color.b = (uint8)round(gradients.addr[j - 1].color.b * (1 - w)
-					+ gradients.addr[j].color.b * w).integer;
-				color.a = (uint8)round(gradients.addr[j - 1].color.a * (1 - w)
-					+ gradients.addr[j].color.a * w).integer;
+					w = w * w * (3.0r - 2.0r * w);
+				color.r = uint8(round(real(gradients.addr[j - 1].color.r)) * (1.0r - w)
+					+ real(gradients.addr[j].color.r) * w);
+				color.g = uint8(round(real(gradients.addr[j - 1].color.g)) * (1.0r - w)
+					+ real(gradients.addr[j].color.g) * w);
+				color.b = uint8(round(real(gradients.addr[j - 1].color.b)) * (1.0r - w)
+					+ real(gradients.addr[j].color.b) * w);
+				color.a = uint8(round(real(gradients.addr[j - 1].color.a)) * (1.0r - w)
+					+ real(gradients.addr[j].color.a) * w);
 			}
 		}
 		return color;
@@ -429,13 +429,13 @@ void bitmap_processor::render(geometry_path &path, bitmap *bmp)
 		ly = min(ly, transformed_path.data.addr[idx].p1.y);
 		hy = max(hy, transformed_path.data.addr[idx].p1.y);
 	}
-	lx = floor(lx - 1);
-	x1 = lx.get_int32();
-	hx = ceil(hx + 2);
-	x2 = hx.get_int32();
+	lx = floor(lx - 1.0r);
+	x1 = int32(lx);
+	hx = ceil(hx + 2.0r);
+	x2 = int32(hx);
 	ly = floor(ly);
 	hy = ceil(hy);
-	ranges.insert_default(0, (uint64)((hy - ly).integer + 1) * sublines);
+	ranges.insert_default(0, uint64((hy - ly).integer + 1) * sublines);
 	for(idx = 0; idx < transformed_path.data.size; idx++)
 	{
 		if(transformed_path.data.addr[idx].type == geometry_path_unit::move)
@@ -443,8 +443,8 @@ void bitmap_processor::render(geometry_path &path, bitmap *bmp)
 		else
 		{
 			v2 = transformed_path.data.addr[idx].p1;
-			l1 = ((v1.y - ly) * sublines).integer;
-			l2 = ((v2.y - ly) * sublines).integer;
+			l1 = uint64((v1.y - ly) * real(sublines));
+			l2 = uint64((v2.y - ly) * real(sublines));
 			if(l2 < l1) swap(&l1, &l2);
 			y = ly + real(l1 + 1) * dy;
 			a = (v2.x - v1.x) / (v2.y - v1.y);
@@ -464,8 +464,8 @@ void bitmap_processor::render(geometry_path &path, bitmap *bmp)
 		s.addr[idx] = 0.0r;
 	for(l = 0; l < ranges.size; l += sublines)
 	{
-		yb = (ly + (uint32)l / sublines).get_int32();
-		if(yb < 0 || yb >= (int32)bmp->height
+		yb = int32(ly) + int32(uint32(l) / sublines);
+		if(yb < 0 || yb >= int32(bmp->height)
 			|| scissor_stack.size != 0
 			&& (yb < scissor_stack.addr[scissor_stack.size - 1].position.y
 				|| yb >= scissor_stack.addr[scissor_stack.size - 1].position.y
@@ -479,14 +479,14 @@ void bitmap_processor::render(geometry_path &path, bitmap *bmp)
 				else m--;
 				if(transformed_path.orientation == face_orientation::counterclockwise && m <= 0
 					|| transformed_path.orientation == face_orientation::clockwise && m >= 0) continue;
-				b1 = floor(ranges.addr[l + j].addr[k].coord).get_int32();
-				b2 = floor(ranges.addr[l + j].addr[k + 1].coord).get_int32();
+				b1 = int32(floor(ranges.addr[l + j].addr[k].coord));
+				b2 = int32(floor(ranges.addr[l + j].addr[k + 1].coord));
 				if(b1 == b2) s.addr[b1 - x1]
 					+= (ranges.addr[l + j].addr[k + 1].coord - ranges.addr[l + j].addr[k].coord) * dy;
 				else
 				{
-					s.addr[b1 - x1] += (b1 + 1 - ranges.addr[l + j].addr[k].coord) * dy;
-					s.addr[b2 - x1] += (ranges.addr[l + j].addr[k + 1].coord - b2) * dy;
+					s.addr[b1 - x1] += (real(b1 + 1) - ranges.addr[l + j].addr[k].coord) * dy;
+					s.addr[b2 - x1] += (ranges.addr[l + j].addr[k + 1].coord - real(b2)) * dy;
 					for(b1++; b1 < b2; b1++)
 						s.addr[b1 - x1] += dy;
 				}
@@ -495,8 +495,8 @@ void bitmap_processor::render(geometry_path &path, bitmap *bmp)
 		for(idx = 0; idx < s.size; idx++)
 		{
 			if(s.addr[idx] == 0.0r) continue;
-			xb = x1 + (int32)idx;
-			if(xb < 0 || xb >= (int32)bmp->width
+			xb = x1 + int32(idx);
+			if(xb < 0 || xb >= int32(bmp->width)
 				|| scissor_stack.size != 0
 				&& (xb < scissor_stack.addr[scissor_stack.size - 1].position.x
 				|| xb >= scissor_stack.addr[scissor_stack.size - 1].position.x
@@ -507,18 +507,54 @@ void bitmap_processor::render(geometry_path &path, bitmap *bmp)
 			}
 			a = s.addr[idx] * opacity;
 			color_value = point_color(xb, yb);
-			color_addr = &bmp->data[((int32)bmp->height - 1 - yb) * (int32)bmp->width + xb];
+			color_addr = &bmp->data[(int32(bmp->height) - 1 - yb) * int32(bmp->width) + xb];
 			if(color_value.a == 255 && a == 1.0r)
 				*color_addr = color_value;
 			else
 			{
-				color_value.a = (uint8)round(real(color_value.a) * a).integer;
-				color_addr->r = ((uint32)color_value.a * color_value.r + (255 - color_value.a) * color_addr->r) / 255;
-				color_addr->g = ((uint32)color_value.a * color_value.g + (255 - color_value.a) * color_addr->g) / 255;
-				color_addr->b = ((uint32)color_value.a * color_value.b + (255 - color_value.a) * color_addr->b) / 255;
+				color_value.a = uint8(round(real(color_value.a) * a));
+				color_addr->r = (uint32(color_value.a) * color_value.r + (255 - color_value.a) * color_addr->r) / 255;
+				color_addr->g = (uint32(color_value.a) * color_value.g + (255 - color_value.a) * color_addr->g) / 255;
+				color_addr->b = (uint32(color_value.a) * color_value.b + (255 - color_value.a) * color_addr->b) / 255;
 				color_addr->a = max(color_addr->a, color_value.a);
 			}
 			s.addr[idx] = 0.0r;
+		}
+	}
+}
+
+void bitmap_processor::fill_bitmap(bitmap &source, vector<int32, 2> target_point, bitmap *target)
+{
+	vector<int32, 2> p;
+	alpha_color color_value, *color_addr;
+	for(uint32 i = 0; i < source.width; i++)
+	{
+		p.x = target_point.x + int32(i);
+		if(p.x < 0 || p.x >= int32(target->width)
+			|| scissor_stack.size != 0
+			&& (p.x < scissor_stack.addr[scissor_stack.size - 1].position.x
+			|| p.x >= scissor_stack.addr[scissor_stack.size - 1].position.x
+			+ scissor_stack.addr[scissor_stack.size - 1].extent.x)) continue;
+		for(uint32 j = 0; j < source.height; j++)
+		{
+			p.y = target_point.y + int32(j);
+			if(p.y < 0 || p.y >= int32(target->height)
+				|| scissor_stack.size != 0
+				&& (p.y < scissor_stack.addr[scissor_stack.size - 1].position.y
+					|| p.y >= scissor_stack.addr[scissor_stack.size - 1].position.y
+					+ scissor_stack.addr[scissor_stack.size - 1].extent.y)) continue;
+			if(source.data[(source.height - 1 - j) * source.width + i].a == 255)
+				target->data[(int32(target->height) - 1 - p.y) * int32(target->width) + p.x]
+					= source.data[(source.height - 1 - j) * source.width + i];
+			else if(source.data[(source.height - 1 - j) * source.width + i].a != 0)
+			{
+				color_value = source.data[(source.height - 1 - j) * source.width + i];
+				color_addr = &target->data[(int32(target->height) - 1 - p.y) * int32(target->width) + p.x];
+				color_addr->r = (uint32(color_value.a) * color_value.r + (255 - color_value.a) * color_addr->r) / 255;
+				color_addr->g = (uint32(color_value.a) * color_value.g + (255 - color_value.a) * color_addr->g) / 255;
+				color_addr->b = (uint32(color_value.a) * color_value.b + (255 - color_value.a) * color_addr->b) / 255;
+				color_addr->a = max(color_addr->a, color_value.a);
+			}
 		}
 	}
 }
@@ -529,30 +565,30 @@ void bitmap_processor::fill_opacity_bitmap(bitmap &source, vector<int32, 2> targ
 	alpha_color color_value, *color_addr;
 	for(uint32 i = 0; i < source.width; i++)
 	{
-		p.x = target_point.x + (int32)i;
-		if(p.x < 0 || p.x >= (int32)target->width
+		p.x = target_point.x + int32(i);
+		if(p.x < 0 || p.x >= int32(target->width)
 			|| scissor_stack.size != 0
 			&& (p.x < scissor_stack.addr[scissor_stack.size - 1].position.x
 			|| p.x >= scissor_stack.addr[scissor_stack.size - 1].position.x
 			+ scissor_stack.addr[scissor_stack.size - 1].extent.x)) continue;
 		for(uint32 j = 0; j < source.height; j++)
 		{
-			p.y = target_point.y + (int32)j;
-			if(p.y < 0 || p.y >= (int32)target->height
+			p.y = target_point.y + int32(j);
+			if(p.y < 0 || p.y >= int32(target->height)
 				|| scissor_stack.size != 0
 				&& (p.y < scissor_stack.addr[scissor_stack.size - 1].position.y
 					|| p.y >= scissor_stack.addr[scissor_stack.size - 1].position.y
 					+ scissor_stack.addr[scissor_stack.size - 1].extent.y)) continue;
 			if(source.data[(source.height - 1 - j) * source.width + i].a == 255)
-				target->data[((int32)target->height - 1 - p.y) * (int32)target->width + p.x] = point_color(p.x, p.y);
+				target->data[(int32(target->height) - 1 - p.y) * int32(target->width) + p.x] = point_color(p.x, p.y);
 			else if(source.data[(source.height - 1 - j) * source.width + i].a != 0)
 			{
 				color_value = point_color(p.x, p.y);
-				color_value.a = (uint8)((uint32)color_value.a * (uint32)source.data[(source.height - 1 - j) * (uint32)source.width + i].a / 255);
-				color_addr = &target->data[((int32)target->height - 1 - p.y) * (int32)target->width + p.x];
-				color_addr->r = ((uint32)color_value.a * color_value.r + (255 - color_value.a) * color_addr->r) / 255;
-				color_addr->g = ((uint32)color_value.a * color_value.g + (255 - color_value.a) * color_addr->g) / 255;
-				color_addr->b = ((uint32)color_value.a * color_value.b + (255 - color_value.a) * color_addr->b) / 255;
+				color_value.a = uint8(uint32(color_value.a) * uint32(source.data[(source.height - 1 - j) * source.width + i].a) / 255);
+				color_addr = &target->data[(int32(target->height) - 1 - p.y) * int32(target->width) + p.x];
+				color_addr->r = (uint32(color_value.a) * color_value.r + (255 - color_value.a) * color_addr->r) / 255;
+				color_addr->g = (uint32(color_value.a) * color_value.g + (255 - color_value.a) * color_addr->g) / 255;
+				color_addr->b = (uint32(color_value.a) * color_value.b + (255 - color_value.a) * color_addr->b) / 255;
 				color_addr->a = max(color_addr->a, color_value.a);
 			}
 		}
