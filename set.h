@@ -392,7 +392,8 @@ template<typename value_type> struct set
 
 	void clear()
 	{
-		clear_node(root);
+		if(root != nullptr)
+			clear_node(root);
 		root = nullptr;
 		size = 0;
 	}

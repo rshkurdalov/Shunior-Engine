@@ -45,6 +45,22 @@ void window::update()
 	bitmap_processor bp;
 	layout->render(layout, vector<int32, 2>(fm.x, fm.y), &bp, &bmp);
 
+	/*bitmap b;
+	b.resize(9, 20);
+	for(uint32 i = 0; i < b.width * b.height; i++)
+		b.data[i] = alpha_color(235, 0, 0, 255);
+	int32 x = 10, y = 10;
+	for(uint32 i = 1; i <= 10000; i++)
+	{
+		bp.fill_opacity_bitmap(b, vector<int32, 2>(x, y), &bmp);
+		x += 10;
+		if(i % 170 == 0)
+		{
+			x = 10;
+			y += 21;
+		}
+	}*/
+
 	/*geometry_path path;
 	path.move(vector<real, 2>(100.0r, 100.0r));
 	path.push_line(vector<real, 2>(200.0r, 100.0r));
@@ -55,7 +71,7 @@ void window::update()
 	bp.rasterization = rasterization_mode::outline;
 	bp.line_width = 6.0r;
 	bp.set_solid_color_brush(alpha_color(255, 0, 0, 255));
-	bp.render_path(path, &bmp);*/
+	bp.render(path, &bmp);*/
 
 	/*geometry_path path;
 	path.move(vector<real, 2>(10.0r, 10.0r));
@@ -72,7 +88,7 @@ void window::update()
 	bp.rasterization = rasterization_mode::outline;
 	bp.line_width = 6.0r;
 	bp.set_solid_color_brush(alpha_color(255, 0, 0, 255));
-	bp.render_path(path, &bmp);*/
+	bp.render(path, &bmp);*/
 
 	os_render_window(this);
 }

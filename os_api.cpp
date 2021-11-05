@@ -359,7 +359,7 @@ bool os_load_glyph(glyph_data *data)
 	for(uint64 i = 0; i < data->font_name.size; i++)
 		str_win32.addr[i] = (char16)data->font_name.addr[i];
 	HFONT hfont = CreateFont(
-		24,
+		data->size,
 		0,
 		0,
 		0,
@@ -382,7 +382,6 @@ bool os_load_glyph(glyph_data *data)
 	uint32 bufferSize = GetOutlineTextMetrics(hdc, 0, nullptr);
 	otm = (LPOUTLINETEXTMETRIC)new uint8[bufferSize];
 	GetOutlineTextMetrics(hdc, bufferSize, otm);
-	data->size = 24;
 	data->ascent = (uint32)tm.tmAscent;
 	data->descent = (uint32)tm.tmDescent;
 	data->internal_leading = (uint32)tm.tmInternalLeading;
@@ -492,6 +491,37 @@ bool os_load_glyph(glyph_data *data)
 		polygon = (TTPOLYGONHEADER *)curve;
 	}
 	data->path.orientation = face_orientation::clockwise;
+
+	if(data->path.data.size != 0)
+	{
+		real lx = max_real, hx = min_real, ly = max_real, hy = min_real;
+		for(uint64 i = 0; i < data->path.data.size; i++)
+		{
+			lx = min(lx, data->path.data.addr[i].p1.x);
+			hx = max(hx, data->path.data.addr[i].p1.x);
+			ly = min(ly, data->path.data.addr[i].p1.y);
+			hy = max(hy, data->path.data.addr[i].p1.y);
+			if(data->path.data.addr[i].type == geometry_path_unit::quadratic_arc)
+			{
+				lx = min(lx, data->path.data.addr[i].p2.x);
+				hx = max(hx, data->path.data.addr[i].p2.x);
+				ly = min(ly, data->path.data.addr[i].p2.y);
+				hy = max(hy, data->path.data.addr[i].p2.y);
+			}
+		}
+		lx = floor(lx);
+		hx = ceil(hx);
+		ly = floor(ly);
+		hy = ceil(hy);
+		data->bmp.resize((hx - lx).integer, (hy - ly).integer);
+		for(uint32 i = 0; i < data->bmp.width * data->bmp.height; i++)
+			data->bmp.data[i] = alpha_color(0, 0, 0, 0);
+		bitmap_processor bp;
+		bp.transform = translate_matrix(-lx, -ly);
+		bp.render(data->path, &data->bmp);
+		data->bmp_offset = vector<real, 2>(lx, ly);
+	}
+
 	data->advance.x = (int32)glyph_metrics.gmCellIncX;
 	data->advance.y = (int32)glyph_metrics.gmCellIncY;
 	DeleteDC(hdc);

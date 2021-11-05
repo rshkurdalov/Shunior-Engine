@@ -59,10 +59,10 @@ void scroll_bar_render(frame *fm, vector<int32, 2> point, bitmap_processor *bp, 
 			content_viewport.position.y - point.y);
 		slider_rect.extent = vector<int32, 2>(slider_size, content_viewport.extent.y);
 	}
-	slider_rect.push_path(&path);
+	path.push_rectangle(rectangle<real>(slider_rect));
 	bp->rasterization = rasterization_mode::fill;
-	identity_matrix(&bp->transform);
+	set_identity_matrix(&bp->transform);
 	bp->brush = brush_type::solid;
 	bp->color = alpha_color(127, 127, 127, 255);
-	bp->render_path(path, bmp);
+	bp->render(path, bmp);
 }

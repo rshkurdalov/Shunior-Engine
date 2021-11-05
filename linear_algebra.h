@@ -38,7 +38,7 @@ vector<real, 2> vector_cross(vector<real, extent> a, vector<real, extent> b)
 }
 
 template<typename value_type, uint32 rows, uint32 columns>
-void identity_matrix(matrix<value_type, rows, columns> *mat)
+void set_identity_matrix(matrix<value_type, rows, columns> *mat)
 {
 	*mat = static_cast<value_type>(0);
 	for(uint32 i = 0; i < min(rows, columns); i++)

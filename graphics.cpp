@@ -28,7 +28,7 @@ bitmap_processor::bitmap_processor()
 {
 	rasterization = rasterization_mode::fill;
 	line_width = 1.0r;
-	identity_matrix(&transform);
+	set_identity_matrix(&transform);
 	opacity = 1.0r;
 	color_interpolation = color_interpolation_mode::flat;
 	set_solid_color_brush(alpha_color(0, 0, 0, 255));
@@ -333,7 +333,7 @@ void outline_path(real width, geometry_path *path)
 	swap(&path->data, &outline_path.data);
 }
 
-void bitmap_processor::render_path(geometry_path &path, bitmap *bmp)
+void bitmap_processor::render(geometry_path &path, bitmap *bmp)
 {
 	const uint64 sublines = 4;
 	const real dy = 0.25r;
@@ -342,7 +342,7 @@ void bitmap_processor::render_path(geometry_path &path, bitmap *bmp)
 	real lx = max_real, hx = min_real,
 		ly = max_real, hy = min_real,
 		x, y, a, c, t, ts, tm;
-	alpha_color color, *dest_color;
+	alpha_color color_value, *color_addr;
 	struct range_coordinate
 	{
 		real coord;
@@ -355,7 +355,7 @@ void bitmap_processor::render_path(geometry_path &path, bitmap *bmp)
 	array<real> s;
 	vector<real, 2> v, v1, v2, v3;
 	geometry_path transformed_path;
-	matrix<real, 3, 3> rotation;
+	matrix<real, 3, 3> elliptic_arc_transform;
 	matrix<real, 1, 3> p;
 	vector<real, 2> p1, p2, p3, p4;
 	if(path.data.size == 0) return;
@@ -405,11 +405,11 @@ void bitmap_processor::render_path(geometry_path &path, bitmap *bmp)
 			ts = (tm - path.data.addr[i].begin_angle) / (2.0r * 3.14r
 				* root(0.5r * (path.data.addr[i].rx * path.data.addr[i].rx + path.data.addr[i].ry * path.data.addr[i].ry), 2));
 			tm -= ts;
-			rotation = rotate_matrix(path.data.addr[i].rotation, path.data.addr[i].p2);
+			elliptic_arc_transform = rotate_matrix(path.data.addr[i].rotation, path.data.addr[i].p2) * transform;
 			for(t = path.data.addr[i].begin_angle + ts; t <= tm; t += ts)
 			{
 				p4 = elliptic_arc_point(path.data.addr[i].p2, path.data.addr[i].rx, path.data.addr[i].ry, t);
-				p = vector<real, 3>(p4.x, p4.y, 1.0r) * rotation;
+				p = vector<real, 3>(p4.x, p4.y, 1.0r) * elliptic_arc_transform;
 				p4 = vector<real, 2>(p.m[0][0], p.m[0][1]);
 				if(transformed_path.data.size != 0 && transformed_path.data.addr[transformed_path.data.size - 1].p1 != p4)
 					transformed_path.push_line(p4);
@@ -506,27 +506,27 @@ void bitmap_processor::render_path(geometry_path &path, bitmap *bmp)
 				continue;
 			}
 			a = s.addr[idx] * opacity;
-			color = point_color(xb, yb);
-			dest_color = &bmp->data[((int32)bmp->height - 1 - yb) * (int32)bmp->width + xb];
-			if(color.a == 255 && a == 1.0r)
-				*dest_color = color;
+			color_value = point_color(xb, yb);
+			color_addr = &bmp->data[((int32)bmp->height - 1 - yb) * (int32)bmp->width + xb];
+			if(color_value.a == 255 && a == 1.0r)
+				*color_addr = color_value;
 			else
 			{
-				color.a = (uint8)round(real(color.a) * a).integer;
-				dest_color->r = ((uint32)color.a * color.r + (255 - color.a) * dest_color->r) / 255;
-				dest_color->g = ((uint32)color.a * color.g + (255 - color.a) * dest_color->g) / 255;
-				dest_color->b = ((uint32)color.a * color.b + (255 - color.a) * dest_color->b) / 255;
-				dest_color->a = max(dest_color->a, color.a);
+				color_value.a = (uint8)round(real(color_value.a) * a).integer;
+				color_addr->r = ((uint32)color_value.a * color_value.r + (255 - color_value.a) * color_addr->r) / 255;
+				color_addr->g = ((uint32)color_value.a * color_value.g + (255 - color_value.a) * color_addr->g) / 255;
+				color_addr->b = ((uint32)color_value.a * color_value.b + (255 - color_value.a) * color_addr->b) / 255;
+				color_addr->a = max(color_addr->a, color_value.a);
 			}
 			s.addr[idx] = 0.0r;
 		}
 	}
 }
 
-void bitmap_processor::render_bitmap(bitmap &source, vector<int32, 2> target_point, bitmap *target)
+void bitmap_processor::fill_opacity_bitmap(bitmap &source, vector<int32, 2> target_point, bitmap *target)
 {
 	vector<int32, 2> p;
-	alpha_color color, *dest_color;
+	alpha_color color_value, *color_addr;
 	for(uint32 i = 0; i < source.width; i++)
 	{
 		p.x = target_point.x + (int32)i;
@@ -544,16 +544,16 @@ void bitmap_processor::render_bitmap(bitmap &source, vector<int32, 2> target_poi
 					|| p.y >= scissor_stack.addr[scissor_stack.size - 1].position.y
 					+ scissor_stack.addr[scissor_stack.size - 1].extent.y)) continue;
 			if(source.data[(source.height - 1 - j) * source.width + i].a == 255)
-				target->data[((int32)target->height - 1 - p.y) * (int32)target->width + p.x]
-					= source.data[(source.height - 1 - j) * source.width + i];
+				target->data[((int32)target->height - 1 - p.y) * (int32)target->width + p.x] = point_color(p.x, p.y);
 			else if(source.data[(source.height - 1 - j) * source.width + i].a != 0)
 			{
-				color = source.data[(source.height - 1 - j) * source.width + i];
-				dest_color = &target->data[((int32)target->height - 1 - p.y) * (int32)target->width + p.x];
-				dest_color->r = ((uint32)color.a * color.r + (255 - color.a) * dest_color->r) / 255;
-				dest_color->g = ((uint32)color.a * color.g + (255 - color.a) * dest_color->g) / 255;
-				dest_color->b = ((uint32)color.a * color.b + (255 - color.a) * dest_color->b) / 255;
-				dest_color->a = max(dest_color->a, color.a);
+				color_value = point_color(p.x, p.y);
+				color_value.a = (uint8)((uint32)color_value.a * (uint32)source.data[(source.height - 1 - j) * (uint32)source.width + i].a / 255);
+				color_addr = &target->data[((int32)target->height - 1 - p.y) * (int32)target->width + p.x];
+				color_addr->r = ((uint32)color_value.a * color_value.r + (255 - color_value.a) * color_addr->r) / 255;
+				color_addr->g = ((uint32)color_value.a * color_value.g + (255 - color_value.a) * color_addr->g) / 255;
+				color_addr->b = ((uint32)color_value.a * color_value.b + (255 - color_value.a) * color_addr->b) / 255;
+				color_addr->a = max(color_addr->a, color_value.a);
 			}
 		}
 	}

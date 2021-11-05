@@ -28,7 +28,7 @@ int __stdcall wWinMain(
 	fl.fm.width_desc = 100uiabs;
 	fl.fm.height_desc = 100uiabs;
 
-	/*string font, str;
+	string font, str;
 	font << U"cambriai";
 	str << U"ab\ncde";
 	char32 ch = U'a';
@@ -38,21 +38,21 @@ int __stdcall wWinMain(
 		{
 			glyph gl;
 			gl.code = U' ';
-			gl.size = 16.0r;
+			gl.size = 16;
 			tf.tl.glyphs.push(gl);
 			ch = U'a';
 		}
 		glyph gl;
 		gl.code = ch;
-		gl.size = 16.0r;
+		gl.size = 16;
 		tf.tl.glyphs.push(gl);
 		ch++;
-	}*/
+	}
 	string text;
 	text << U"text 1";
 	tf.insert(text);
-	tf.fm.width_desc = 0.2uirel;
-	tf.fm.height_desc = 0.2uirel;
+	tf.fm.width_desc = 0.8uirel;
+	tf.fm.height_desc = 0.8uirel;
 	tf.editable = true;
 	tf.fm.focusable = true;
 	fl.frames.push(flow_layout_frame(&tf.fm, horizontal_align::left, vertical_align::top, false));

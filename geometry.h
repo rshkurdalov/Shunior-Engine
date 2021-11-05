@@ -15,6 +15,25 @@ vector<real, 2> elliptic_arc_point(
 	real ry,
 	real angle);
 
+template<typename value_type> struct rectangle
+{
+	vector<value_type, 2> position;
+	vector<value_type, 2> extent;
+
+	rectangle() {}
+
+	rectangle(vector<value_type, 2> position, vector<value_type, 2> extent) 
+		: position(position), extent(extent) {}
+
+	template<typename right_type> rectangle(rectangle<right_type> &rect)
+	{
+		position.x = value_type(rect.position.x);
+		position.y = value_type(rect.position.y);
+		extent.x = value_type(rect.extent.x);
+		extent.y = value_type(rect.extent.y);
+	}
+};
+
 enum struct geometry_path_unit
 {
 	move,
@@ -51,24 +70,5 @@ struct geometry_path
 	void push_line(vector<real, 2> point);
 	void push_quadratic_arc(vector<real, 2> point1, vector<real, 2> point2);
 	void push_elliptic_arc(vector<real, 2> point, real radius_ratio, real begin_angle, real end_angle, real rotation);
-};
-
-template<typename value_type> struct rectangle
-{
-	vector<value_type, 2> position;
-	vector<value_type, 2> extent;
-
-	rectangle() {}
-
-	rectangle(vector<value_type, 2> position, vector<value_type, 2> extent) 
-		: position(position), extent(extent) {}
-
-	void push_path(geometry_path *path)
-	{
-		path->move(vector<real, 2>(real(position.x), real(position.y)));
-		path->push_line(vector<real, 2>(real(position.x + extent.x), real(position.y)));
-		path->push_line(vector<real, 2>(real(position.x + extent.x), real(position.y + extent.y)));
-		path->push_line(vector<real, 2>(real(position.x), real(position.y + extent.y)));
-		path->push_line(vector<real, 2>(real(position.x), real(position.y)));
-	}
+	void push_rectangle(rectangle<real> rect);
 };

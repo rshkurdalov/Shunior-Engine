@@ -90,7 +90,7 @@ struct text_field
 {
 	frame fm;
 	string font;
-	real font_size;
+	uint32 font_size;
 	text_layout tl;
 	uint64 caret;
 	uint64 select_caret;

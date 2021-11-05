@@ -81,3 +81,12 @@ void geometry_path::push_elliptic_arc(vector<real, 2> point, real radius_ratio, 
 	unit.p1 = vector<real, 2>(p.m[0][0], p.m[0][1]);
 	data.push(unit);
 }
+
+void geometry_path::push_rectangle(rectangle<real> rect)
+{
+	move(vector<real, 2>(rect.position.x, rect.position.y));
+	push_line(vector<real, 2>(rect.position.x + rect.extent.x, rect.position.y));
+	push_line(vector<real, 2>(rect.position.x + rect.extent.x, rect.position.y + rect.extent.y));
+	push_line(vector<real, 2>(rect.position.x, rect.position.y + rect.extent.y));
+	push_line(vector<real, 2>(rect.position.x, rect.position.y));
+}

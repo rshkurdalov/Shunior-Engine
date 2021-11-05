@@ -29,7 +29,7 @@ text_field::text_field()
 	fm.key_press = text_field_key_press;
 	fm.char_input = text_field_char_input;
 	font << U"cambria";
-	font_size = 20.0r;
+	font_size = 20;
 	caret = 0;
 	select_caret = 0;
 	selecting = false;
@@ -69,24 +69,24 @@ void text_field::scroll_to_caret()
 {
 	if(tl.glyphs.size == 0) return;
 	rectangle<int32> content_viewport = frame_content_viewport(&fm);
-	vector<real, 2> point;
-	real line_height;
+	vector<int32, 2> point;
+	int32 line_height;
 	tl.hit_test_position(caret, &point, &line_height);
 	if(tl.multiline)
 	{
-		point.y += real(content_viewport.extent.y + (int32)scroll.viewport_offset) - tl.height;
+		point.y += content_viewport.extent.y + (int32)scroll.viewport_offset - int32(tl.height);
 		if(point.y < 0)
-			scroll.shift(ceil(-point.y).integer, false);
-		else if(point.y + line_height >= real(content_viewport.extent.y))
-			scroll.shift(ceil(point.y + line_height - real(content_viewport.extent.y)).integer, true);
+			scroll.shift(uint32(-point.y), false);
+		else if(point.y + line_height >= content_viewport.extent.y)
+			scroll.shift(point.y + line_height - content_viewport.extent.y, true);
 	}
 	else
 	{
-		point.x -= real(scroll.viewport_offset);
+		point.x -= int32(scroll.viewport_offset);
 		if(point.x < 0)
-			scroll.shift(ceil(-point.x).integer, true);
-		else if(point.x >= real(content_viewport.extent.x))
-			scroll.shift(ceil(point.x - real(content_viewport.extent.x)).integer, false);
+			scroll.shift(uint32(-point.x), true);
+		else if(point.x >= content_viewport.extent.x)
+			scroll.shift(point.x - content_viewport.extent.x, false);
 	}
 }
 
@@ -99,11 +99,11 @@ void text_field_subframes(frame *fm, array<frame *> *frames)
 vector<uint32, 2> text_field_content_size(frame *fm, uint32 viewport_width, uint32 viewport_height)
 {
 	text_field *tf = (text_field *)fm->data;
-	real tl_width = tf->tl.width;
-	tf->tl.width = max_real;
-	vector<real, 2> size = tf->tl.content_size();
+	uint32 tl_width = tf->tl.width;
+	tf->tl.width = 1000000000;
+	vector<int32, 2> size = tf->tl.content_size();
 	tf->tl.width = tl_width;
-	return vector<uint32, 2>(ceil(size.x).integer, ceil(size.y).integer);
+	return vector<uint32, 2>(uint32(size.x), uint32(size.y));
 }
 
 struct text_field_render_glyph_args
@@ -115,9 +115,9 @@ struct text_field_render_glyph_args
 
 void text_field_render_glyph(
 	glyph &gl,
-	vector<real, 2> point,
-	real baseline,
-	real line_height,
+	vector<int32, 2> point,
+	int32 baseline,
+	int32 line_height,
 	uint64 idx,
 	void *data,
 	bitmap *bmp)
@@ -125,12 +125,9 @@ void text_field_render_glyph(
 	text_field_render_glyph_args *args = (text_field_render_glyph_args *)data;
 	rectangle<int32> content_viewport = frame_content_viewport(&args->tf->fm);
 	content_viewport.position -= args->base_point;
-	if(ceil(point.y - baseline + line_height).get_int32() < content_viewport.position.y
-		|| floor(point.y - baseline).get_int32() > content_viewport.position.y + content_viewport.extent.y)
+	if(point.y - baseline + line_height < content_viewport.position.y
+		|| point.y - baseline > content_viewport.position.y + content_viewport.extent.y)
 		return;
-	point.x = round(point.x);
-	point.y = round(point.y);
-	real k = gl.size / real(gl.data->size);
 	rectangle<real> rect;
 	geometry_path rect_path;
 	args->bp->rasterization = rasterization_mode::fill;
@@ -140,44 +137,47 @@ void text_field_render_glyph(
 	{
 		rect.position = vector<real, 2>(0.0r, 0.0r);
 		rect.extent = vector<real, 2>(
-			ceil(k * real(gl.data->advance.x)),
-			ceil(line_height));
-		rect.push_path(&rect_path);
+			real(gl.data->advance.x),
+			real(line_height));
+		rect_path.push_rectangle(rect);
 		args->bp->set_solid_color_brush(alpha_color(0, 0, 200, 255));
 		args->bp->transform = translate_matrix(point.x, round(point.y - baseline));
-		args->bp->render_path(rect_path, bmp);
+		args->bp->render(rect_path, bmp);
 		rect_path.data.clear();
 	}
 	if(begin <= idx && idx < end)
 		args->bp->set_solid_color_brush(alpha_color(255, 255, 255, 255));
 	else args->bp->set_solid_color_brush(alpha_color(0, 0, 0, 255));
-	args->bp->transform = scale_matrix(k, k, vector<real, 2>(0.0r, 0.0r))
-		* translate_matrix(point.x, point.y);
-	args->bp->render_path(gl.data->path, bmp);
+	args->bp->fill_opacity_bitmap(
+		gl.data->bmp,
+		vector<int32, 2>(
+			point.x + gl.data->bmp_offset.x.get_int32(),
+			point.y + gl.data->bmp_offset.y.get_int32()),
+		bmp);
 	if(gl.underlined)
 	{
 		rect.position = vector<real, 2>(
 			0.0r,
-			round(k * real(gl.data->underline_offset)));
+			real(gl.data->underline_offset));
 		rect.extent = vector<real, 2>(
-			round(k * real(gl.data->advance.x)),
-			round(k * real(gl.data->underline_size)));
-		rect.push_path(&rect_path);
+			real(gl.data->advance.x),
+			real(gl.data->underline_size));
+		rect_path.push_rectangle(rect);
 		args->bp->transform = translate_matrix(point.x, point.y);
-		args->bp->render_path(rect_path, bmp);
+		args->bp->render(rect_path, bmp);
 		rect_path.data.clear();
 	}
 	if(gl.strikedthrough)
 	{
 		rect.position = vector<real, 2>(
 			0.0r,
-			round(k * real(gl.data->strikethrough_offset)));
+			real(gl.data->strikethrough_offset));
 		rect.extent = vector<real, 2>(
-			round(k * real(gl.data->advance.x)),
-			round(k * real(gl.data->strikethrough_size)));
-		rect.push_path(&rect_path);
+			real(gl.data->advance.x),
+			real(gl.data->strikethrough_size));
+		rect_path.push_rectangle(rect);
 		args->bp->transform = translate_matrix(point.x, point.y);
-		args->bp->render_path(rect_path, bmp);
+		args->bp->render(rect_path, bmp);
 		rect_path.data.clear();
 	}
 	if(caret_visible
@@ -189,13 +189,13 @@ void text_field_render_glyph(
 	{
 		rect.position = vector<real, 2>(point.x, point.y - baseline + 0.1r * line_height);
 		if(args->tf->caret == args->tf->tl.glyphs.size)
-			rect.position.x += k * real(gl.data->advance.x);
-		rect.position.x = round(rect.position.x);
+			rect.position.x += real(gl.data->advance.x);
+		rect.position.x = rect.position.x;
 		rect.extent = vector<real, 2>(2.0r, 0.8r * line_height);
-		rect.push_path(&rect_path);
-		identity_matrix(&args->bp->transform);
+		rect_path.push_rectangle(rect);
+		set_identity_matrix(&args->bp->transform);
 		args->bp->set_solid_color_brush(alpha_color(0, 0, 0, 255));
-		args->bp->render_path(rect_path, bmp);
+		args->bp->render(rect_path, bmp);
 	}
 }
 
@@ -213,23 +213,23 @@ void text_field_render(frame *fm, vector<int32, 2> point, bitmap_processor *bp, 
 	geometry_path rect_path;
 	if(tf->editable)
 	{
-		viewport.push_path(&rect_path);
-		identity_matrix(&bp->transform);
+		rect_path.push_rectangle(rectangle<real>(viewport));
+		set_identity_matrix(&bp->transform);
 		bp->rasterization = rasterization_mode::fill;
 		bp->brush = brush_type::solid;
 		bp->color = alpha_color(255, 255, 255, 255);
-		bp->render_path(rect_path, bmp);
+		bp->render(rect_path, bmp);
 		bp->rasterization = rasterization_mode::outline;
 		bp->line_width = 1.0r;
 		bp->color = alpha_color(0, 0, 0, 255);
-		bp->render_path(rect_path, bmp);
+		bp->render(rect_path, bmp);
 		rect_path.data.clear();
 	}
 	tf->scroll.fm.width = tf->scroll.fm.width_desc.value.integer;
 	tf->scroll.fm.height = (uint32)viewport.extent.y;
 	tf->scroll.fm.x = point.x + viewport.position.x + viewport.extent.x - tf->scroll.fm.width;
 	tf->scroll.fm.y = point.y + viewport.position.y;
-	tf->tl.width = real(content_viewport.extent.x);
+	tf->tl.width = uint32(content_viewport.extent.x);
 	if(tf->tl.multiline)
 	{
 		tf->scroll.fm.visible = true;
@@ -256,25 +256,26 @@ void text_field_render(frame *fm, vector<int32, 2> point, bitmap_processor *bp, 
 			tf->scroll.viewport_offset = min(tf->scroll.viewport_offset, tf->scroll.content_size - tf->scroll.viewport_size);
 		else tf->scroll.viewport_offset = 0;
 	}
-	tf->tl.width = real(content_viewport.extent.x);
-	tf->tl.height = real(content_viewport.extent.y);
+	tf->tl.width = uint32(content_viewport.extent.x);
+	tf->tl.height = uint32(content_viewport.extent.y);
 	bp->push_scissor(viewport);
 	text_field_render_glyph_args args;
 	args.tf = tf;
 	args.bp = bp;
 	args.base_point = point;
-	vector<real, 2> text_point;
+	vector<int32, 2> text_point;
 	if(tf->tl.multiline)
-		text_point = vector<real, 2>(real(content_viewport.position.x),
-			real(content_viewport.position.y
+		text_point = vector<int32, 2>(
+			content_viewport.position.x,
+			content_viewport.position.y
 				+ content_viewport.extent.y
-				- (int32)tf->tl.height.integer
-				+ (int32)tf->scroll.viewport_offset));
-	else text_point = vector<real, 2>(
-		real(content_viewport.position.x - (int32)tf->scroll.viewport_offset),
-			real(content_viewport.position.y
-				+ content_viewport.extent.y
-				- (int32)tf->tl.height.integer));
+				- (int32)tf->tl.height
+				+ (int32)tf->scroll.viewport_offset);
+	else text_point = vector<int32, 2>(
+		content_viewport.position.x - (int32)tf->scroll.viewport_offset,
+		content_viewport.position.y
+			+ content_viewport.extent.y
+			- (int32)tf->tl.height);
 	tf->tl.render(
 		text_point,
 		text_field_render_glyph,
@@ -291,11 +292,11 @@ void text_field_render(frame *fm, vector<int32, 2> point, bitmap_processor *bp, 
 			content_viewport.position.x,
 			content_viewport.position.y + content_viewport.extent.y - 0.9r * tf->font_size);
 		rect.extent = vector<real, 2>(2.0r, 0.8r * tf->font_size);
-		rect.push_path(&rect_path);
+		rect_path.push_rectangle(rect);
 		bp->rasterization = rasterization_mode::fill;
-		identity_matrix(&bp->transform);
+		set_identity_matrix(&bp->transform);
 		bp->set_solid_color_brush(alpha_color(0, 0, 0, 255));
-		bp->render_path(rect_path, bmp);
+		bp->render(rect_path, bmp);
 	}
 	tf->scroll.fm.render(&tf->scroll.fm, point, bp, bmp);
 }
@@ -306,14 +307,14 @@ void text_field_mouse_click(frame *fm)
 	rectangle<int32> content_viewport = frame_content_viewport(&tf->fm);
 	if(tf->tl.multiline)
 		tf->tl.hit_test_point(
-			vector<real, 2>(
-				real(mouse()->position.x - content_viewport.position.x),
-				real(mouse()->position.y - (content_viewport.position.y + (int32)tf->scroll.viewport_offset))),
+			vector<int32, 2>(
+				mouse()->position.x - content_viewport.position.x,
+				mouse()->position.y - (content_viewport.position.y + (int32)tf->scroll.viewport_offset)),
 			&tf->caret);
 	else tf->tl.hit_test_point(
-			vector<real, 2>(
-				real(mouse()->position.x - (content_viewport.position.x - (int32)tf->scroll.viewport_offset)),
-				real(mouse()->position.y - content_viewport.position.y)),
+			vector<int32, 2>(
+				mouse()->position.x - (content_viewport.position.x - (int32)tf->scroll.viewport_offset),
+				mouse()->position.y - content_viewport.position.y),
 			&tf->caret);
 	tf->select_caret = tf->caret;
 	tf->selecting = true;
@@ -331,14 +332,14 @@ void text_field_mouse_move(frame *fm)
 		{
 			if(tf->tl.multiline)
 				tf->tl.hit_test_point(
-					vector<real, 2>(
-						real(mouse()->position.x - content_viewport.position.x),
-						real(mouse()->position.y - (content_viewport.position.y + (int32)tf->scroll.viewport_offset))),
+					vector<int32, 2>(
+						mouse()->position.x - content_viewport.position.x,
+						mouse()->position.y - (content_viewport.position.y + (int32)tf->scroll.viewport_offset)),
 					&tf->caret);
 			else tf->tl.hit_test_point(
-				vector<real, 2>(
-					real(mouse()->position.x - (content_viewport.position.x - (int32)tf->scroll.viewport_offset)),
-					real(mouse()->position.y - content_viewport.position.y)),
+				vector<int32, 2>(
+					mouse()->position.x - (content_viewport.position.x - (int32)tf->scroll.viewport_offset),
+					mouse()->position.y - content_viewport.position.y),
 				&tf->caret);
 		}
 	}
@@ -388,20 +389,20 @@ void text_field_key_press(frame *fm)
 		}
 		else if(keyboard()->key_pressed[(uint8)key_code::down] && tf->tl.multiline && tf->tl.glyphs.size != 0)
 		{
-			vector<real, 2> point;
-			real line_height;
+			vector<int32, 2> point;
+			int32 line_height;
 			tf->tl.hit_test_position(tf->caret, &point, &line_height);
-			point.y -= 1.0r;
+			point.y--;
 			tf->tl.hit_test_point(point, &tf->caret);
 			tf->select_caret = tf->caret;
 			tf->scroll_to_caret();
 		}
 		else if(keyboard()->key_pressed[(uint8)key_code::up] && tf->tl.multiline && tf->tl.glyphs.size != 0)
 		{
-			vector<real, 2> point;
-			real line_height;
+			vector<int32, 2> point;
+			int32 line_height;
 			tf->tl.hit_test_position(tf->caret, &point, &line_height);
-			point.y += line_height + 1.0r;
+			point.y += line_height + 1;
 			tf->tl.hit_test_point(point, &tf->caret);
 			tf->select_caret = tf->caret;
 			tf->scroll_to_caret();
