@@ -43,3 +43,16 @@ frame *pulled_frame()
 {
 	return pulled_frame_addr;
 }
+
+void layout_model::attach(frame *fm)
+{
+	fm->padding_left = 0uiabs;
+	fm->padding_bottom = 0uiabs;
+	fm->padding_right = 0uiabs;
+	fm->padding_top = 0uiabs;
+}
+
+void layout_model::render(frame *fm, vector<int32, 2> point, bitmap_processor *bp, bitmap *bmp)
+{
+
+}

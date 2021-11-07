@@ -402,7 +402,7 @@ void text_layout_render_glyph_def(
 	void *data,
 	bitmap *bmp) //!!!
 {
-	bitmap_processor bp;
+	/*bitmap_processor bp;
 	bp.transform = translate_matrix(real(point.x), real(point.y));
 	bp.set_solid_color_brush(alpha_color(0, 0, 0, 255));
 	bp.render(gl.data->path, bmp);
@@ -434,5 +434,5 @@ void text_layout_render_glyph_def(
 		bp.transform = translate_matrix(point.x, point.y);
 		bp.render(rect_path, bmp);
 		rect_path.data.clear();
-	}
+	}*/
 }

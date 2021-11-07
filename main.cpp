@@ -55,7 +55,7 @@ int __stdcall wWinMain(
 	tf.fm.height_desc = 0.8uirel;
 	tf.data.editable = true;
 	tf.fm.focusable = true;
-	fl.frames.push(flow_layout_frame(&tf.fm, horizontal_align::left, vertical_align::top, false));
+	fl.data.frames.push(flow_layout_frame(&tf.fm, horizontal_align::left, vertical_align::top, false));
 
 	text.clear();
 	text << U"text 2";
@@ -68,7 +68,7 @@ int __stdcall wWinMain(
 	tf1.fm.focusable = true;
 	tf1.data.tl.halign = horizontal_align::center;
 	tf1.data.tl.valign = vertical_align::center;
-	fl.frames.push(flow_layout_frame(&tf1.fm, horizontal_align::left, vertical_align::center, false));
+	fl.data.frames.push(flow_layout_frame(&tf1.fm, horizontal_align::left, vertical_align::center, false));
 
 	text.clear();
 	text << U"text 3";
@@ -81,7 +81,7 @@ int __stdcall wWinMain(
 	tf2.fm.focusable = true;
 	tf2.data.tl.halign = horizontal_align::right;
 	tf2.data.tl.valign = vertical_align::bottom;
-	fl.frames.push(flow_layout_frame(&tf2.fm, horizontal_align::right, vertical_align::top, true));
+	fl.data.frames.push(flow_layout_frame(&tf2.fm, horizontal_align::right, vertical_align::top, true));
 
 	text.clear();
 	text << U"text 4";
@@ -92,7 +92,7 @@ int __stdcall wWinMain(
 	tf3.fm.min_height = 30;
 	tf3.data.editable = true;
 	tf3.fm.focusable = true;
-	fl.frames.push(flow_layout_frame(&tf3.fm, horizontal_align::center, vertical_align::top, false));
+	fl.data.frames.push(flow_layout_frame(&tf3.fm, horizontal_align::center, vertical_align::top, false));
 
 	// fl1
 
@@ -108,7 +108,7 @@ int __stdcall wWinMain(
 	tf4.fm.min_height = 30;
 	tf4.data.editable = true;
 	tf4.fm.focusable = true;
-	fl1.frames.push(flow_layout_frame(&tf4.fm, horizontal_align::left, vertical_align::top, false));
+	fl1.data.frames.push(flow_layout_frame(&tf4.fm, horizontal_align::left, vertical_align::top, false));
 
 	text.clear();
 	text << U"text 6";
@@ -119,7 +119,7 @@ int __stdcall wWinMain(
 	tf5.fm.min_height = 30;
 	tf5.data.editable = true;
 	tf5.fm.focusable = true;
-	fl1.frames.push(flow_layout_frame(&tf5.fm, horizontal_align::left, vertical_align::top, false));
+	fl1.data.frames.push(flow_layout_frame(&tf5.fm, horizontal_align::left, vertical_align::top, false));
 
 	text.clear();
 	text << U"text 7";
@@ -130,9 +130,9 @@ int __stdcall wWinMain(
 	tf6.fm.min_height = 30;
 	tf6.data.editable = true;
 	tf6.fm.focusable = true;
-	fl1.frames.push(flow_layout_frame(&tf6.fm, horizontal_align::left, vertical_align::center, false));
+	fl1.data.frames.push(flow_layout_frame(&tf6.fm, horizontal_align::left, vertical_align::center, false));
 
-	fl.frames.push(flow_layout_frame(&fl1.fm, horizontal_align::left, vertical_align::top, false));
+	fl.data.frames.push(flow_layout_frame(&fl1.fm, horizontal_align::left, vertical_align::top, false));
 
 	window wnd;
 	wnd.layout = &fl.fm;

@@ -114,12 +114,10 @@ bool intersect_lines(
 {
 	vector<real, 2> v1 = line1_point2 - line1_point1,
 		v2 = line2_point2 - line2_point1;
-	real c = v1.x * v2.y - v1.y * v2.x;
-	if(abs(c) < 0.0001r) return false;
-	c = 1.0r / c;
-	real c1 = v2.x * (line1_point1.y - line2_point1.y) - v2.y * (line1_point1.x - line2_point1.x);
-	intersect_point->x = static_cast<real>(line1_point1.x + c1 * c * v1.x);
-	intersect_point->y = static_cast<real>(line1_point1.y + c1 * c * v1.y);
+	if(abs(v1.x * v2.y - v1.y * v2.x) < 0.0001r) return false;
+	real c = v2.x * (line1_point1.y - line2_point1.y) - v2.y * (line1_point1.x - line2_point1.x);
+	intersect_point->x = line1_point1.x + c * v1.x / (v1.x * v2.y - v1.y * v2.x);
+	intersect_point->y = line1_point1.y + c * v1.y / (v1.x * v2.y - v1.y * v2.x);
 	return true;
 }
 

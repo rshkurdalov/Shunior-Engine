@@ -523,26 +523,64 @@ void bitmap_processor::render(geometry_path &path, bitmap *bmp)
 	}
 }
 
-void bitmap_processor::fill_bitmap(bitmap &source, vector<int32, 2> target_point, bitmap *target)
+void bitmap_processor::fill_area(rectangle<int32> target_area, bitmap *target) //!!!opacity
 {
-	vector<int32, 2> p;
-	alpha_color color_value, *color_addr;
-	for(uint32 i = 0; i < source.width; i++)
+	vector<int32, 2> p,
+		p1(max(0, target_area.position.x), max(0, target_area.position.y)),
+		p2(min(target_area.position.x + target_area.extent.x, int32(target->width)),
+			min(target_area.position.y + target_area.extent.y, int32(target->height)));
+	if(scissor_stack.size != 0)
 	{
-		p.x = target_point.x + int32(i);
-		if(p.x < 0 || p.x >= int32(target->width)
-			|| scissor_stack.size != 0
-			&& (p.x < scissor_stack.addr[scissor_stack.size - 1].position.x
-			|| p.x >= scissor_stack.addr[scissor_stack.size - 1].position.x
-			+ scissor_stack.addr[scissor_stack.size - 1].extent.x)) continue;
-		for(uint32 j = 0; j < source.height; j++)
+		p1.x = max(p1.x, scissor_stack.addr[scissor_stack.size - 1].position.x);
+		p1.y = max(p1.y, scissor_stack.addr[scissor_stack.size - 1].position.y);
+		p2.x = min(p2.x, scissor_stack.addr[scissor_stack.size - 1].position.x
+			+ scissor_stack.addr[scissor_stack.size - 1].extent.x);
+		p2.y = min(p2.y, scissor_stack.addr[scissor_stack.size - 1].position.y
+			+ scissor_stack.addr[scissor_stack.size - 1].extent.y);
+	}
+	alpha_color color_value, *color_addr;
+	for(p.x = p1.x; p.x < p2.x; p.x++)
+	{
+		for(p.y = p1.y; p.y < p2.y; p.y++)
 		{
-			p.y = target_point.y + int32(j);
-			if(p.y < 0 || p.y >= int32(target->height)
-				|| scissor_stack.size != 0
-				&& (p.y < scissor_stack.addr[scissor_stack.size - 1].position.y
-					|| p.y >= scissor_stack.addr[scissor_stack.size - 1].position.y
-					+ scissor_stack.addr[scissor_stack.size - 1].extent.y)) continue;
+			color_value = point_color(p.x, p.y);
+			if(color_value.a == 255)
+				target->data[(int32(target->height) - 1 - p.y) * int32(target->width) + p.x] = color_value;
+			else if(color_value.a != 0)
+			{
+				color_addr = &target->data[(int32(target->height) - 1 - p.y) * int32(target->width) + p.x];
+				color_addr->r = (uint32(color_value.a) * color_value.r + (255 - color_value.a) * color_addr->r) / 255;
+				color_addr->g = (uint32(color_value.a) * color_value.g + (255 - color_value.a) * color_addr->g) / 255;
+				color_addr->b = (uint32(color_value.a) * color_value.b + (255 - color_value.a) * color_addr->b) / 255;
+				color_addr->a = max(color_addr->a, color_value.a);
+			}
+		}
+	}
+}
+
+void bitmap_processor::fill_bitmap(bitmap &source, vector<int32, 2> target_point, bitmap *target) //!!!opacity
+{
+	vector<int32, 2> p,
+		p1(max(0, target_point.x), max(0, target_point.y)),
+		p2(min(target_point.x + int32(source.width), int32(target->width)),
+			min(target_point.y + int32(source.height), int32(target->height)));
+	if(scissor_stack.size != 0)
+	{
+		p1.x = max(p1.x, scissor_stack.addr[scissor_stack.size - 1].position.x);
+		p1.y = max(p1.y, scissor_stack.addr[scissor_stack.size - 1].position.y);
+		p2.x = min(p2.x, scissor_stack.addr[scissor_stack.size - 1].position.x
+			+ scissor_stack.addr[scissor_stack.size - 1].extent.x);
+		p2.y = min(p2.y, scissor_stack.addr[scissor_stack.size - 1].position.y
+			+ scissor_stack.addr[scissor_stack.size - 1].extent.y);
+	}
+	uint32 i, j;
+	alpha_color color_value, *color_addr;
+	for(p.x = p1.x; p.x < p2.x; p.x++)
+	{
+		i = uint32(p.x - target_point.x);
+		for(p.y = p1.y; p.y < p2.y; p.y++)
+		{
+			j = uint32(p.y - target_point.y);
 			if(source.data[(source.height - 1 - j) * source.width + i].a == 255)
 				target->data[(int32(target->height) - 1 - p.y) * int32(target->width) + p.x]
 					= source.data[(source.height - 1 - j) * source.width + i];
@@ -559,29 +597,30 @@ void bitmap_processor::fill_bitmap(bitmap &source, vector<int32, 2> target_point
 	}
 }
 
-void bitmap_processor::fill_opacity_bitmap(bitmap &source, vector<int32, 2> target_point, bitmap *target)
+void bitmap_processor::fill_opacity_bitmap(bitmap &source, vector<int32, 2> target_point, bitmap *target) //!!!opacity
 {
-	vector<int32, 2> p;
-	alpha_color color_value, *color_addr;
-	for(uint32 i = 0; i < source.width; i++)
+	vector<int32, 2> p,
+		p1(max(0, target_point.x), max(0, target_point.y)),
+		p2(min(target_point.x + int32(source.width), int32(target->width)),
+			min(target_point.y + int32(source.height), int32(target->height)));
+	if(scissor_stack.size != 0)
 	{
-		p.x = target_point.x + int32(i);
-		if(p.x < 0 || p.x >= int32(target->width)
-			|| scissor_stack.size != 0
-			&& (p.x < scissor_stack.addr[scissor_stack.size - 1].position.x
-			|| p.x >= scissor_stack.addr[scissor_stack.size - 1].position.x
-			+ scissor_stack.addr[scissor_stack.size - 1].extent.x)) continue;
-		for(uint32 j = 0; j < source.height; j++)
+		p1.x = max(p1.x, scissor_stack.addr[scissor_stack.size - 1].position.x);
+		p1.y = max(p1.y, scissor_stack.addr[scissor_stack.size - 1].position.y);
+		p2.x = min(p2.x, scissor_stack.addr[scissor_stack.size - 1].position.x
+			+ scissor_stack.addr[scissor_stack.size - 1].extent.x);
+		p2.y = min(p2.y, scissor_stack.addr[scissor_stack.size - 1].position.y
+			+ scissor_stack.addr[scissor_stack.size - 1].extent.y);
+	}
+	uint32 i, j;
+	alpha_color color_value, *color_addr;
+	for(p.x = p1.x; p.x < p2.x; p.x++)
+	{
+		i = uint32(p.x - target_point.x);
+		for(p.y = p1.y; p.y < p2.y; p.y++)
 		{
-			p.y = target_point.y + int32(j);
-			if(p.y < 0 || p.y >= int32(target->height)
-				|| scissor_stack.size != 0
-				&& (p.y < scissor_stack.addr[scissor_stack.size - 1].position.y
-					|| p.y >= scissor_stack.addr[scissor_stack.size - 1].position.y
-					+ scissor_stack.addr[scissor_stack.size - 1].extent.y)) continue;
-			if(source.data[(source.height - 1 - j) * source.width + i].a == 255)
-				target->data[(int32(target->height) - 1 - p.y) * int32(target->width) + p.x] = point_color(p.x, p.y);
-			else if(source.data[(source.height - 1 - j) * source.width + i].a != 0)
+			j = uint32(p.y - target_point.y);
+			if(source.data[(source.height - 1 - j) * source.width + i].a != 0)
 			{
 				color_value = point_color(p.x, p.y);
 				color_value.a = uint8(uint32(color_value.a) * uint32(source.data[(source.height - 1 - j) * source.width + i].a) / 255);

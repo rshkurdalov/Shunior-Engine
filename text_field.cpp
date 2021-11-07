@@ -59,19 +59,19 @@ void text_field_data::scroll_to_caret(frame *fm)
 	tl.hit_test_position(caret, &point, &line_height);
 	if(tl.multiline)
 	{
-		point.y += content_viewport.extent.y + int32(scroll.viewport_offset) - int32(tl.height);
+		point.y += content_viewport.extent.y + int32(scroll.data.viewport_offset) - int32(tl.height);
 		if(point.y < 0)
-			scroll.shift(uint32(-point.y), false);
+			scroll.data.shift(uint32(-point.y), false);
 		else if(point.y + line_height >= content_viewport.extent.y)
-			scroll.shift(point.y + line_height - content_viewport.extent.y, true);
+			scroll.data.shift(point.y + line_height - content_viewport.extent.y, true);
 	}
 	else
 	{
-		point.x -= int32(scroll.viewport_offset);
+		point.x -= int32(scroll.data.viewport_offset);
 		if(point.x < 0)
-			scroll.shift(uint32(-point.x), true);
+			scroll.data.shift(uint32(-point.x), true);
 		else if(point.x >= content_viewport.extent.x)
-			scroll.shift(point.x - content_viewport.extent.x, false);
+			scroll.data.shift(point.x - content_viewport.extent.x, false);
 	}
 }
 
@@ -112,22 +112,15 @@ void text_field_render_glyph(
 	if(point.y - baseline + line_height < content_viewport.position.y
 		|| point.y - baseline > content_viewport.position.y + content_viewport.extent.y)
 		return;
-	rectangle<real> rect;
-	geometry_path rect_path;
-	args->bp->rasterization = rasterization_mode::fill;
+	rectangle<int32> rect;
 	uint64 begin = args->tf->caret, end = args->tf->select_caret;
 	if(end < begin) swap(&begin, &end);
 	if(begin <= idx && idx < end)
 	{
-		rect.position = vector<real, 2>(0.0r, 0.0r);
-		rect.extent = vector<real, 2>(
-			real(gl.data->advance.x),
-			real(line_height));
-		rect_path.push_rectangle(rect);
+		rect.position = vector<int32, 2>(point.x, point.y - baseline);
+		rect.extent = vector<int32, 2>(gl.data->advance.x, line_height);
 		args->bp->set_solid_color_brush(alpha_color(0, 0, 200, 255));
-		args->bp->transform = translate_matrix(point.x, round(point.y - baseline));
-		args->bp->render(rect_path, bmp);
-		rect_path.data.clear();
+		args->bp->fill_area(rect, bmp);
 	}
 	if(begin <= idx && idx < end)
 		args->bp->set_solid_color_brush(alpha_color(255, 255, 255, 255));
@@ -140,29 +133,15 @@ void text_field_render_glyph(
 		bmp);
 	if(gl.underlined)
 	{
-		rect.position = vector<real, 2>(
-			0.0r,
-			real(gl.data->underline_offset));
-		rect.extent = vector<real, 2>(
-			real(gl.data->advance.x),
-			real(gl.data->underline_size));
-		rect_path.push_rectangle(rect);
-		args->bp->transform = translate_matrix(point.x, point.y);
-		args->bp->render(rect_path, bmp);
-		rect_path.data.clear();
+		rect.position = vector<int32, 2>(point.x, point.y + gl.data->underline_offset);
+		rect.extent = vector<int32, 2>(gl.data->advance.x, gl.data->underline_size);
+		args->bp->fill_area(rect, bmp);
 	}
 	if(gl.strikedthrough)
 	{
-		rect.position = vector<real, 2>(
-			0.0r,
-			real(gl.data->strikethrough_offset));
-		rect.extent = vector<real, 2>(
-			real(gl.data->advance.x),
-			real(gl.data->strikethrough_size));
-		rect_path.push_rectangle(rect);
-		args->bp->transform = translate_matrix(point.x, point.y);
-		args->bp->render(rect_path, bmp);
-		rect_path.data.clear();
+		rect.position = vector<int32, 2>(point.x, point.y + gl.data->strikethrough_offset);
+		rect.extent = vector<int32, 2>(gl.data->advance.x, gl.data->strikethrough_size);
+		args->bp->fill_area(rect, bmp);
 	}
 	if(caret_visible
 		&& focused_frame() == args->fm
@@ -171,14 +150,16 @@ void text_field_render_glyph(
 		|| idx == args->tf->caret - 1
 			&& args->tf->caret == args->tf->tl.glyphs.size))
 	{
-		rect.position = vector<real, 2>(real(point.x), real(point.y - baseline) + 0.1r * real(line_height));
+		rectangle<real> caret_rect;
+		geometry_path caret_path;
+		caret_rect.position = vector<real, 2>(real(point.x), real(point.y - baseline) + 0.1r * real(line_height));
 		if(args->tf->caret == args->tf->tl.glyphs.size)
-			rect.position.x += real(gl.data->advance.x);
-		rect.extent = vector<real, 2>(2.0r, 0.8r * real(line_height));
-		rect_path.push_rectangle(rect);
+			caret_rect.position.x += real(gl.data->advance.x);
+		caret_rect.extent = vector<real, 2>(2.0r, 0.8r * real(line_height));
+		caret_path.push_rectangle(caret_rect);
 		set_identity_matrix(&args->bp->transform);
 		args->bp->set_solid_color_brush(alpha_color(0, 0, 0, 255));
-		args->bp->render(rect_path, bmp);
+		args->bp->render(caret_path, bmp);
 	}
 }
 
@@ -200,28 +181,30 @@ void text_field_data::render(frame *fm, vector<int32, 2> point, bitmap_processor
 	if(tl.multiline)
 	{
 		scroll.fm.visible = true;
-		scroll.content_size = uint32(ceil(tl.content_size().y));
-		scroll.viewport_size = uint32(content_viewport.extent.y);
-		if(scroll.content_size > scroll.viewport_size)
+		scroll.data.content_size = uint32(ceil(tl.content_size().y));
+		scroll.data.viewport_size = uint32(content_viewport.extent.y);
+		if(scroll.data.content_size > scroll.data.viewport_size)
 		{
 			content_viewport.extent.x -= scroll.fm.width;
-			scroll.viewport_offset = min(scroll.viewport_offset, scroll.content_size - scroll.viewport_size);
+			scroll.data.viewport_offset
+				= min(scroll.data.viewport_offset, scroll.data.content_size - scroll.data.viewport_size);
 		}
 		else
 		{
 			scroll.fm.visible = false;
-			scroll.viewport_offset = 0;
+			scroll.data.viewport_offset = 0;
 		}
 		if(content_viewport.extent.x <= 0) return;
 	}
 	else
 	{
 		scroll.fm.visible = false;
-		scroll.content_size = ceil(tl.content_size().x).integer;
-		scroll.viewport_size = uint32(content_viewport.extent.x);
-		if(scroll.content_size > scroll.viewport_size)
-			scroll.viewport_offset = min(scroll.viewport_offset, scroll.content_size - scroll.viewport_size);
-		else scroll.viewport_offset = 0;
+		scroll.data.content_size = ceil(tl.content_size().x).integer;
+		scroll.data.viewport_size = uint32(content_viewport.extent.x);
+		if(scroll.data.content_size > scroll.data.viewport_size)
+			scroll.data.viewport_offset
+				= min(scroll.data.viewport_offset, scroll.data.content_size - scroll.data.viewport_size);
+		else scroll.data.viewport_offset = 0;
 	}
 	tl.width = uint32(content_viewport.extent.x);
 	tl.height = uint32(content_viewport.extent.y);
@@ -238,9 +221,9 @@ void text_field_data::render(frame *fm, vector<int32, 2> point, bitmap_processor
 			content_viewport.position.y
 				+ content_viewport.extent.y
 				- int32(tl.height)
-				+ int32(scroll.viewport_offset));
+				+ int32(scroll.data.viewport_offset));
 	else text_point = vector<int32, 2>(
-		content_viewport.position.x - int32(scroll.viewport_offset),
+		content_viewport.position.x - int32(scroll.data.viewport_offset),
 		content_viewport.position.y
 			+ content_viewport.extent.y
 			- int32(tl.height));
@@ -277,11 +260,11 @@ void text_field_data::mouse_click(frame *fm)
 		tl.hit_test_point(
 			vector<int32, 2>(
 				mouse()->position.x - content_viewport.position.x,
-				mouse()->position.y - (content_viewport.position.y + int32(scroll.viewport_offset))),
+				mouse()->position.y - (content_viewport.position.y + int32(scroll.data.viewport_offset))),
 			&caret);
 	else tl.hit_test_point(
 			vector<int32, 2>(
-				mouse()->position.x - (content_viewport.position.x - int32(scroll.viewport_offset)),
+				mouse()->position.x - (content_viewport.position.x - int32(scroll.data.viewport_offset)),
 				mouse()->position.y - content_viewport.position.y),
 			&caret);
 	select_caret = caret;
@@ -301,11 +284,11 @@ void text_field_data::mouse_move(frame *fm)
 				tl.hit_test_point(
 					vector<int32, 2>(
 						mouse()->position.x - content_viewport.position.x,
-						mouse()->position.y - (content_viewport.position.y + int32(scroll.viewport_offset))),
+						mouse()->position.y - (content_viewport.position.y + int32(scroll.data.viewport_offset))),
 					&caret);
 			else tl.hit_test_point(
 				vector<int32, 2>(
-					mouse()->position.x - (content_viewport.position.x - int32(scroll.viewport_offset)),
+					mouse()->position.x - (content_viewport.position.x - int32(scroll.data.viewport_offset)),
 					mouse()->position.y - content_viewport.position.y),
 				&caret);
 		}
@@ -333,7 +316,7 @@ void text_field_data::focus_loss(frame *fm)
 
 void text_field_data::mouse_wheel_rotate(frame *fm)
 {
-	scroll.shift(50, mouse()->wheel_forward);
+	scroll.data.shift(50, mouse()->wheel_forward);
 }
 
 void text_field_data::key_press(frame *fm)
@@ -463,6 +446,7 @@ void text_field_model::render(frame *fm, text_field_data *data, vector<int32, 2>
 		content_viewport = frame_content_viewport(fm);
 	viewport.position -= vector<int32, 2>(fm->x, fm->y);
 	if(!fm->visible
+		|| !data->editable
 		|| viewport.extent.x <= 0 || viewport.extent.y <= 0
 		|| content_viewport.extent.x <= 0 || content_viewport.extent.y <= 0)
 		return;
@@ -472,19 +456,15 @@ void text_field_model::render(frame *fm, text_field_data *data, vector<int32, 2>
 		surface.resize(fm->width, fm->height);
 		for(uint32 i = 0; i < surface.width * surface.height; i++)
 			surface.data[i] = alpha_color(0, 0, 0, 0);
-		if(data->editable)
-		{
-			geometry_path rect_path;
-			bitmap_processor bp_surface;
-			rect_path.push_rectangle(rectangle<real>(viewport));
-			bp_surface.set_solid_color_brush(alpha_color(255, 255, 255, 255));
-			bp_surface.render(rect_path, &surface);
-			bp_surface.rasterization = rasterization_mode::outline;
-			bp_surface.line_width = 1.0r;
-			bp_surface.set_solid_color_brush(alpha_color(0, 0, 0, 255));
-			bp_surface.render(rect_path, &surface);
-			rect_path.data.clear();
-		}
+		geometry_path path;
+		path.push_rectangle(rectangle<real>(viewport));
+		bitmap_processor bp_surface;
+		bp_surface.set_solid_color_brush(alpha_color(255, 255, 255, 255));
+		bp_surface.render(path, &surface);
+		bp_surface.rasterization = rasterization_mode::outline;
+		bp_surface.line_width = 1.0r;
+		bp_surface.set_solid_color_brush(alpha_color(0, 0, 0, 255));
+		bp_surface.render(path, &surface);
 	}
 	bp->opacity = 1.0r;
 	bp->fill_bitmap(surface, vector<int32, 2>(fm->x, fm->y) - point, bmp);

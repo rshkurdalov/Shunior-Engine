@@ -35,19 +35,39 @@ void window_key_press(frame *fm);
 void window_key_release(frame *fm);
 void window_char_input(frame *fm);
 
-struct scroll_bar
+struct scroll_bar_data
 {
-	frame fm;
 	bool vertical;
 	uint32 content_size;
 	uint32 viewport_size;
 	uint32 viewport_offset;
 
-	scroll_bar();
+	void attach(frame *fm);
 	void shift(uint32 value, bool forward);
 };
 
+struct scroll_bar_model
+{
+	void attach(frame *fm);
+	void render(frame *fm, scroll_bar_data *data, vector<int32, 2> point, bitmap_processor *bp, bitmap *bmp);
+};
+
 void scroll_bar_render(frame *fm, vector<int32, 2> point, bitmap_processor *bp, bitmap *bmp);
+
+struct scroll_bar
+{
+	frame fm;
+	scroll_bar_data data;
+	scroll_bar_model model;
+
+	scroll_bar();
+};
+
+struct layout_model
+{
+	void attach(frame *fm);
+	void render(frame *fm, vector<int32, 2> point, bitmap_processor *bp, bitmap *bmp);
+};
 
 struct flow_layout_frame
 {
@@ -67,9 +87,8 @@ struct flow_layout_frame
 		line_break(line_break) {}
 };
 
-struct flow_layout
+struct flow_layout_data
 {
-	frame fm;
 	array<flow_layout_frame> frames;
 	flow_axis direction;
 	flow_offset offset;
@@ -77,14 +96,27 @@ struct flow_layout
 	scroll_bar xscroll;
 	scroll_bar yscroll;
 
-	flow_layout();
+	void attach(frame *fm);
+	void subframes(frame *fm, array<frame *> *frames_addr);
+	vector<uint32, 2> content_size(frame *fm, uint32 viewport_width, uint32 viewport_height);
+	void update_layout(frame *fm);
+	void render(frame *fm, vector<int32, 2> point, bitmap_processor *bp, bitmap *bmp);
+	void mouse_wheel_rotate(frame *fm);
 };
 
 void flow_layout_subframes(frame *fm, array<frame *> *frames);
 vector<uint32, 2> flow_layout_content_size(frame *fm, uint32 viewport_width, uint32 viewport_height);
-void flow_layout_update_layout(frame *fm);
 void flow_layout_render(frame *fm, vector<int32, 2> point, bitmap_processor *bp, bitmap *bmp);
 void flow_layout_mouse_wheel_rotate(frame *fm);
+
+struct flow_layout
+{
+	frame fm;
+	flow_layout_data data;
+	layout_model model;
+
+	flow_layout();
+};
 
 struct text_field_data
 {
