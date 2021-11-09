@@ -228,7 +228,7 @@ real pow(real x, uint32 y)
 {
 	if(y == 1) return x;
 	real a = pow(x, y >> 1), b = a * a;
-	if(a != 0.0r && abs(b / a - a) > 0.000000001r)
+	if(a != 0.0r && abs(b / a - a) > 0.000000002r)
 		b = undefined_real;
 	else if(y & 1)
 	{

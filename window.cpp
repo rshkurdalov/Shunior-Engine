@@ -162,7 +162,11 @@ void window_mouse_release(frame *fm)
 	window *wnd = (window *)(fm->data);
 	frame *receiver = window_mouse_event_receiver(wnd, window_mouse_release);
 	receiver->mouse_release(receiver);
-	// !!!
+	if(pulled_frame() != nullptr)
+	{
+		pulled_frame()->mouse_release(pulled_frame());
+		pull_frame(nullptr);
+	}
 }
 
 void window_mouse_move(frame *fm)
@@ -171,7 +175,8 @@ void window_mouse_move(frame *fm)
 	frame *receiver = window_mouse_event_receiver(wnd, window_mouse_move);
 	hover_frame(receiver);
 	receiver->mouse_move(receiver);
-	// !!!
+	if(pulled_frame() != nullptr)
+		pulled_frame()->mouse_move(pulled_frame());
 }
 
 void window_mouse_wheel_rotate(frame *fm)

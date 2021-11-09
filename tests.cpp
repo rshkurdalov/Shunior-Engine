@@ -176,6 +176,10 @@ void test_linear_algebra()
 	r = root(9.0r, 2);
 	r = root(8.0r, 3);
 	r = root(800000.0r, 2);
+
+	vector<real, 2> v = vector<real, 2>(96.107510240r - 95.080509997r, 2.660436428r - 2.380373700r);
+	r = vector_dot(v, v);
+	r = root(r, 2);
 }
 
 void test_set()

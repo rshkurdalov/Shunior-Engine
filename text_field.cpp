@@ -18,6 +18,7 @@ void text_field_data::attach(frame *fm)
 	caret = 0;
 	select_caret = 0;
 	selecting = false;
+	selection_visible = true;
 	tl.multiline = true;
 	editable = false;
 }
@@ -115,14 +116,14 @@ void text_field_render_glyph(
 	rectangle<int32> rect;
 	uint64 begin = args->tf->caret, end = args->tf->select_caret;
 	if(end < begin) swap(&begin, &end);
-	if(begin <= idx && idx < end)
+	if(args->tf->selection_visible && begin <= idx && idx < end)
 	{
 		rect.position = vector<int32, 2>(point.x, point.y - baseline);
 		rect.extent = vector<int32, 2>(gl.data->advance.x, line_height);
 		args->bp->set_solid_color_brush(alpha_color(0, 0, 200, 255));
 		args->bp->fill_area(rect, bmp);
 	}
-	if(begin <= idx && idx < end)
+	if(args->tf->selection_visible && begin <= idx && idx < end)
 		args->bp->set_solid_color_brush(alpha_color(255, 255, 255, 255));
 	else args->bp->set_solid_color_brush(alpha_color(0, 0, 0, 255));
 	args->bp->fill_opacity_bitmap(
@@ -297,6 +298,7 @@ void text_field_data::mouse_move(frame *fm)
 
 void text_field_data::focus_receive(frame *fm)
 {
+	if(!editable) return;
 	caret_visible = true;
 	if(caret_timer == nullptr)
 	{
@@ -312,6 +314,8 @@ void text_field_data::focus_loss(frame *fm)
 {
 	if(caret_timer != nullptr)
 		caret_timer->reset();
+	caret = 0;
+	select_caret = 0;
 }
 
 void text_field_data::mouse_wheel_rotate(frame *fm)
@@ -466,7 +470,6 @@ void text_field_model::render(frame *fm, text_field_data *data, vector<int32, 2>
 		bp_surface.set_solid_color_brush(alpha_color(0, 0, 0, 255));
 		bp_surface.render(path, &surface);
 	}
-	bp->opacity = 1.0r;
 	bp->fill_bitmap(surface, vector<int32, 2>(fm->x, fm->y) - point, bmp);
 }
 

@@ -34,6 +34,18 @@ template<typename value_type> struct rectangle
 	}
 };
 
+template<typename value_type> struct rounded_rectangle
+{
+	rectangle<value_type> rect;
+	value_type rx;
+	value_type ry;
+
+	rounded_rectangle() {}
+
+	rounded_rectangle(rectangle<value_type> rect, value_type rx, value_type ry)
+		: rect(rect), rx(rx), ry(ry) {}
+};
+
 enum struct geometry_path_unit
 {
 	move,
@@ -71,4 +83,5 @@ struct geometry_path
 	void push_quadratic_arc(vector<real, 2> point1, vector<real, 2> point2);
 	void push_elliptic_arc(vector<real, 2> point, real radius_ratio, real begin_angle, real end_angle, real rotation);
 	void push_rectangle(rectangle<real> rect);
+	void push_rounded_rectangle(rounded_rectangle<real> rrect);
 };

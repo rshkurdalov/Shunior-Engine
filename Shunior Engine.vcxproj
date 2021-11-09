@@ -28,6 +28,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="os_api.cpp" />
     <ClCompile Include="graphics.cpp" />
+    <ClCompile Include="push_button.cpp" />
     <ClCompile Include="real.cpp" />
     <ClCompile Include="scroll_bar.cpp" />
     <ClCompile Include="string.cpp" />

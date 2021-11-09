@@ -126,6 +126,7 @@ struct text_field_data
 	uint64 caret;
 	uint64 select_caret;
 	bool selecting;
+	bool selection_visible;
 	bool editable;
 	scroll_bar scroll;
 
@@ -176,4 +177,46 @@ struct text_field
 	text_field_model model;
 
 	text_field();
+};
+
+struct push_button_data
+{
+	void (*button_click)(void *data);
+	void *data;
+
+	void attach(text_field_data *tf_data);
+	void mouse_click(frame *fm);
+	void mouse_release(frame *fm);
+};
+
+struct push_button_model
+{
+	bitmap inner_surface;
+	bitmap border_surface;
+	vector<uint32, 2> rendered_size;
+	
+	void attach(frame *fm);
+	void render(frame *fm, vector<int32, 2> point, bitmap_processor *bp, bitmap *bmp);
+};
+
+void push_button_subframes(frame *fm, array<frame *> *frames);
+vector<uint32, 2> push_button_content_size(frame *fm, uint32 viewport_width, uint32 viewport_height);
+void push_button_render(frame *fm, vector<int32, 2> point, bitmap_processor *bp, bitmap *bmp);
+void push_button_mouse_click(frame *fm);
+void push_button_mouse_release(frame *fm);
+void push_button_mouse_move(frame *fm);
+void push_button_focus_receive(frame *fm);
+void push_button_focus_loss(frame *fm);
+void push_button_mouse_wheel_rotate(frame *fm);
+void push_button_key_press(frame *fm);
+void push_button_char_input(frame *fm);
+
+struct push_button
+{
+	frame fm;
+	text_field_data tf_data;
+	push_button_data pb_data;
+	push_button_model model;
+
+	push_button();
 };

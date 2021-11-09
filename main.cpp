@@ -22,6 +22,7 @@ int __stdcall wWinMain(
 
 	flow_layout fl, fl1;
 	text_field tf, tf1, tf2, tf3, tf4, tf5, tf6;
+	push_button pb;
 
 	// fl
 
@@ -99,7 +100,7 @@ int __stdcall wWinMain(
 	fl1.fm.width_desc = 1.0uirel;
 	fl1.fm.height_desc = 100uiauto;
 
-	text.clear();
+	/*text.clear();
 	text << U"text 5";
 	tf4.data.insert(text);
 	tf4.fm.width_desc = 100uiauto;
@@ -108,7 +109,15 @@ int __stdcall wWinMain(
 	tf4.fm.min_height = 30;
 	tf4.data.editable = true;
 	tf4.fm.focusable = true;
-	fl1.data.frames.push(flow_layout_frame(&tf4.fm, horizontal_align::left, vertical_align::top, false));
+	fl1.data.frames.push(flow_layout_frame(&tf4.fm, horizontal_align::left, vertical_align::top, false));*/
+	text.clear();
+	text << U"text 5";
+	pb.tf_data.insert(text);
+	pb.fm.width_desc = 100uiauto;
+	pb.fm.height_desc = 1.0uirel;
+	pb.fm.min_width = 100;
+	pb.fm.min_height = 30;
+	fl1.data.frames.push(flow_layout_frame(&pb.fm, horizontal_align::left, vertical_align::top, false));
 
 	text.clear();
 	text << U"text 6";

@@ -90,3 +90,20 @@ void geometry_path::push_rectangle(rectangle<real> rect)
 	push_line(vector<real, 2>(rect.position.x, rect.position.y + rect.extent.y));
 	push_line(vector<real, 2>(rect.position.x, rect.position.y));
 }
+
+void geometry_path::push_rounded_rectangle(rounded_rectangle<real> rrect)
+{
+	move(vector<real, 2>(rrect.rect.position.x + rrect.rx, rrect.rect.position.y));
+	push_line(vector<real, 2>(rrect.rect.position.x + rrect.rect.extent.x - rrect.rx, rrect.rect.position.y));
+	push_elliptic_arc(vector<real, 2>(rrect.rect.position.x + rrect.rect.extent.x, rrect.rect.position.y + rrect.ry),
+		rrect.ry / rrect.rx, 0.75r, 0.0r, 0.0r);
+	push_line(vector<real, 2>(rrect.rect.position.x + rrect.rect.extent.x, rrect.rect.position.y + rrect.rect.extent.y - rrect.ry));
+	push_elliptic_arc(vector<real, 2>(rrect.rect.position.x + rrect.rect.extent.x - rrect.rx, rrect.rect.position.y + rrect.rect.extent.y),
+		rrect.ry / rrect.rx, 0.0r, 0.25r, 0.0r);
+	push_line(vector<real, 2>(rrect.rect.position.x + rrect.rx, rrect.rect.position.y + rrect.rect.extent.y));
+	push_elliptic_arc(vector<real, 2>(rrect.rect.position.x, rrect.rect.position.y + rrect.rect.extent.y - rrect.ry),
+		rrect.ry / rrect.rx, 0.25r, 0.5r, 0.0r);
+	push_line(vector<real, 2>(rrect.rect.position.x, rrect.rect.position.y + rrect.ry));
+	push_elliptic_arc(vector<real, 2>(rrect.rect.position.x + rrect.rx, rrect.rect.position.y),
+		rrect.ry / rrect.rx, 0.5r, 0.75r, 0.0r);
+}

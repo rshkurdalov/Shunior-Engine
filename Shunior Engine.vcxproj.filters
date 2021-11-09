@@ -79,6 +79,9 @@
     <ClCompile Include="timer.cpp">
       <Filter>Исходные файлы\global</Filter>
     </ClCompile>
+    <ClCompile Include="push_button.cpp">
+      <Filter>Исходные файлы\ui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="tests.h">

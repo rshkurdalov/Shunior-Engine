@@ -4,6 +4,14 @@
 template<typename value_type, uint32 extent> struct vector
 {
 	value_type coord[extent];
+
+	vector() {}
+
+	template<typename right_type> vector(vector<right_type, extent> &v)
+	{
+		coherent_mapping<extent>(
+			[] (value_type value) -> right_type { return right_type(value); }, coord, v.coord);
+	}
 };
 
 template<typename value_type> struct vector<value_type, 1>
@@ -17,6 +25,11 @@ template<typename value_type> struct vector<value_type, 1>
 	vector() {}
 
 	vector(value_type x) : x(x) {}
+
+	template<typename right_type> vector(vector<right_type, 1> v)
+	{
+		x = right_type(v.x);
+	}
 };
 
 template<typename value_type> struct vector<value_type, 2>
@@ -30,6 +43,12 @@ template<typename value_type> struct vector<value_type, 2>
 	vector() {}
 
 	vector(value_type x, value_type y) : x(x), y(y) {}
+
+	template<typename right_type> vector(vector<right_type, 2> v)
+	{
+		x = right_type(v.x);
+		y = right_type(v.y);
+	}
 };
 
 template<typename value_type> struct vector<value_type, 3>
@@ -43,6 +62,13 @@ template<typename value_type> struct vector<value_type, 3>
 	vector() {}
 
 	vector(value_type x, value_type y, value_type z) : x(x), y(y), z(z) {}
+
+	template<typename right_type> vector(vector<right_type, 3> v)
+	{
+		x = right_type(v.x);
+		y = right_type(v.y);
+		z = right_type(v.z);
+	}
 };
 
 template<typename value_type> struct vector<value_type, 4>
@@ -56,6 +82,14 @@ template<typename value_type> struct vector<value_type, 4>
 	vector() {}
 
 	vector(value_type x, value_type y, value_type z, value_type w) : x(x), y(y), z(z), w(w) {}
+
+	template<typename right_type> vector(vector<right_type, 4> v)
+	{
+		x = right_type(v.x);
+		y = right_type(v.y);
+		z = right_type(v.z);
+		w = right_type(v.w);
+	}
 };
 
 template<typename value_type, uint32 extent>

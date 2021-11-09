@@ -399,12 +399,11 @@ void bitmap_processor::render(geometry_path &path, bitmap *bmp)
 		{
 			p = vector<real, 3>(path.data.addr[i].p1.x, path.data.addr[i].p1.y, 1.0r) * transform;
 			p2 = vector<real, 2>(p.m[0][0], p.m[0][1]);
-			tm = path.data.addr[i].end_angle;
+			ts = 1.0r / (2.0r * 3.14r
+				* root(0.5r * (path.data.addr[i].rx * path.data.addr[i].rx + path.data.addr[i].ry * path.data.addr[i].ry), 2));
+			tm = path.data.addr[i].end_angle - ts;
 			if(path.data.addr[i].begin_angle >= path.data.addr[i].end_angle)
 				tm += 1.0r;
-			ts = (tm - path.data.addr[i].begin_angle) / (2.0r * 3.14r
-				* root(0.5r * (path.data.addr[i].rx * path.data.addr[i].rx + path.data.addr[i].ry * path.data.addr[i].ry), 2));
-			tm -= ts;
 			elliptic_arc_transform = rotate_matrix(path.data.addr[i].rotation, path.data.addr[i].p2) * transform;
 			for(t = path.data.addr[i].begin_angle + ts; t <= tm; t += ts)
 			{
@@ -523,7 +522,7 @@ void bitmap_processor::render(geometry_path &path, bitmap *bmp)
 	}
 }
 
-void bitmap_processor::fill_area(rectangle<int32> target_area, bitmap *target) //!!!opacity
+void bitmap_processor::fill_area(rectangle<int32> target_area, bitmap *target)
 {
 	vector<int32, 2> p,
 		p1(max(0, target_area.position.x), max(0, target_area.position.y)),
@@ -538,12 +537,14 @@ void bitmap_processor::fill_area(rectangle<int32> target_area, bitmap *target) /
 		p2.y = min(p2.y, scissor_stack.addr[scissor_stack.size - 1].position.y
 			+ scissor_stack.addr[scissor_stack.size - 1].extent.y);
 	}
+	uint32 o = uint32(255.0r * opacity);
 	alpha_color color_value, *color_addr;
 	for(p.x = p1.x; p.x < p2.x; p.x++)
 	{
 		for(p.y = p1.y; p.y < p2.y; p.y++)
 		{
 			color_value = point_color(p.x, p.y);
+			color_value.a = uint32(color_value.a) * o / 255;
 			if(color_value.a == 255)
 				target->data[(int32(target->height) - 1 - p.y) * int32(target->width) + p.x] = color_value;
 			else if(color_value.a != 0)
@@ -558,7 +559,7 @@ void bitmap_processor::fill_area(rectangle<int32> target_area, bitmap *target) /
 	}
 }
 
-void bitmap_processor::fill_bitmap(bitmap &source, vector<int32, 2> target_point, bitmap *target) //!!!opacity
+void bitmap_processor::fill_bitmap(bitmap &source, vector<int32, 2> target_point, bitmap *target)
 {
 	vector<int32, 2> p,
 		p1(max(0, target_point.x), max(0, target_point.y)),
@@ -573,7 +574,7 @@ void bitmap_processor::fill_bitmap(bitmap &source, vector<int32, 2> target_point
 		p2.y = min(p2.y, scissor_stack.addr[scissor_stack.size - 1].position.y
 			+ scissor_stack.addr[scissor_stack.size - 1].extent.y);
 	}
-	uint32 i, j;
+	uint32 i, j, o = uint32(255.0r * opacity);
 	alpha_color color_value, *color_addr;
 	for(p.x = p1.x; p.x < p2.x; p.x++)
 	{
@@ -581,12 +582,12 @@ void bitmap_processor::fill_bitmap(bitmap &source, vector<int32, 2> target_point
 		for(p.y = p1.y; p.y < p2.y; p.y++)
 		{
 			j = uint32(p.y - target_point.y);
-			if(source.data[(source.height - 1 - j) * source.width + i].a == 255)
-				target->data[(int32(target->height) - 1 - p.y) * int32(target->width) + p.x]
-					= source.data[(source.height - 1 - j) * source.width + i];
+			color_value = source.data[(source.height - 1 - j) * source.width + i];
+			color_value.a = uint32(color_value.a) * o / 255;
+			if(color_value.a == 255)
+				target->data[(int32(target->height) - 1 - p.y) * int32(target->width) + p.x] = color_value;
 			else if(source.data[(source.height - 1 - j) * source.width + i].a != 0)
 			{
-				color_value = source.data[(source.height - 1 - j) * source.width + i];
 				color_addr = &target->data[(int32(target->height) - 1 - p.y) * int32(target->width) + p.x];
 				color_addr->r = (uint32(color_value.a) * color_value.r + (255 - color_value.a) * color_addr->r) / 255;
 				color_addr->g = (uint32(color_value.a) * color_value.g + (255 - color_value.a) * color_addr->g) / 255;
@@ -597,7 +598,7 @@ void bitmap_processor::fill_bitmap(bitmap &source, vector<int32, 2> target_point
 	}
 }
 
-void bitmap_processor::fill_opacity_bitmap(bitmap &source, vector<int32, 2> target_point, bitmap *target) //!!!opacity
+void bitmap_processor::fill_opacity_bitmap(bitmap &source, vector<int32, 2> target_point, bitmap *target)
 {
 	vector<int32, 2> p,
 		p1(max(0, target_point.x), max(0, target_point.y)),
@@ -612,7 +613,7 @@ void bitmap_processor::fill_opacity_bitmap(bitmap &source, vector<int32, 2> targ
 		p2.y = min(p2.y, scissor_stack.addr[scissor_stack.size - 1].position.y
 			+ scissor_stack.addr[scissor_stack.size - 1].extent.y);
 	}
-	uint32 i, j;
+	uint32 i, j, o = uint32(255.0r * opacity);
 	alpha_color color_value, *color_addr;
 	for(p.x = p1.x; p.x < p2.x; p.x++)
 	{
@@ -623,7 +624,8 @@ void bitmap_processor::fill_opacity_bitmap(bitmap &source, vector<int32, 2> targ
 			if(source.data[(source.height - 1 - j) * source.width + i].a != 0)
 			{
 				color_value = point_color(p.x, p.y);
-				color_value.a = uint8(uint32(color_value.a) * uint32(source.data[(source.height - 1 - j) * source.width + i].a) / 255);
+				color_value.a = uint8(uint32(color_value.a)
+					* uint32(source.data[(source.height - 1 - j) * source.width + i].a) * o / (255 * 255));
 				color_addr = &target->data[(int32(target->height) - 1 - p.y) * int32(target->width) + p.x];
 				color_addr->r = (uint32(color_value.a) * color_value.r + (255 - color_value.a) * color_addr->r) / 255;
 				color_addr->g = (uint32(color_value.a) * color_value.g + (255 - color_value.a) * color_addr->g) / 255;

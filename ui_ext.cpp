@@ -19,7 +19,7 @@ uint32 resolve_ui_size(ui_size size, uint32 related_size)
 {
 	if(size.type == ui_size_type::relative)
 		size.value *= real(related_size);
-	return size.value.integer;
+	return uint32(size.value);
 }
 
 rectangle<int32> frame_viewport(frame *fm)
@@ -27,9 +27,9 @@ rectangle<int32> frame_viewport(frame *fm)
 	rectangle<int32> rect;
 	rect.position.x = fm->x + int32(resolve_ui_size(fm->margin_left, fm->width));
 	rect.position.y = fm->y + int32(resolve_ui_size(fm->margin_bottom, fm->height));
-	rect.extent.x = fm->width - (rect.position.x - fm->x)
+	rect.extent.x = int32(fm->width) - (rect.position.x - fm->x)
 		- int32(resolve_ui_size(fm->margin_right, fm->width));
-	rect.extent.y = fm->height - (rect.position.y - fm->y)
+	rect.extent.y = int32(fm->height) - (rect.position.y - fm->y)
 		- int32(resolve_ui_size(fm->margin_top, fm->height));
 	return rect;
 }
@@ -138,8 +138,11 @@ void frame_global_subframes(frame *fm, array<frame *> *frames)
 
 bool frame_hit_test_def(frame *fm, vector<int32, 2> point)
 {
-	return point.x >= fm->x && point.x < fm->x + int32(fm->width)
-		&& point.y >= fm->y && point.y < fm->y + int32(fm->height);
+	rectangle<int32> viewport = frame_viewport(fm);
+	return point.x >= viewport.position.x
+		&& point.x < viewport.position.x + viewport.extent.x
+		&& point.y >= viewport.position.y
+		&& point.y < viewport.position.y + viewport.extent.y;
 }
 
 void frame_subframes_def(frame *fm, array<frame *> *frames)
