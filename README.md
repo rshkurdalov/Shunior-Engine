@@ -8,5 +8,5 @@ BSD 3
 rshkurdalov@gmail.com<br>
 https://www.linkedin.com/in/roman-shkurdalov-a9601a135/
 # Support
-https://new.donatepay.ru/@shuniortv
+https://new.donatepay.ru/@shuniortv<br>
 VISA 4441 1144 4900 4611
