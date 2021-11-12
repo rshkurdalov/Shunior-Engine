@@ -297,8 +297,8 @@ vector<uint32, 2> flow_layout_content_size(frame *fm, uint32 viewport_width, uin
 void flow_layout_render(frame *fm, vector<int32, 2> point, bitmap_processor *bp, bitmap *bmp)
 {
 	flow_layout *fl = (flow_layout *)(fm->data);
-	fl->data.render(fm, point, bp, bmp);
 	fl->model.render(fm, point, bp, bmp);
+	fl->data.render(fm, point, bp, bmp);
 }
 
 void flow_layout_mouse_wheel_rotate(frame *fm)

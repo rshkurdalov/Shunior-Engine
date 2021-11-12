@@ -13,7 +13,7 @@ int __stdcall wWinMain(
 	int nCmdShow)
 {
 	//test_array();
-	//test_string();
+	test_string();
 	//test_vector();
 	//test_matrix();
 	//test_real();
@@ -142,6 +142,12 @@ int __stdcall wWinMain(
 	fl1.data.frames.push(flow_layout_frame(&tf6.fm, horizontal_align::left, vertical_align::center, false));
 
 	fl.data.frames.push(flow_layout_frame(&fl1.fm, horizontal_align::left, vertical_align::top, false));
+
+	fl.fm.margin_left = 0uiabs;
+	fl.fm.margin_bottom = 0uiabs;
+	fl.fm.margin_right = 0uiabs;
+	fl.fm.margin_top = 0uiabs;
+	fl.model.background_color = alpha_color(235, 235, 235, 255);
 
 	window wnd;
 	wnd.layout = &fl.fm;

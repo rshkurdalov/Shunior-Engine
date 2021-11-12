@@ -53,6 +53,15 @@ void test_string()
 	str << "text";
 	str << u"text";
 	str << U"text";
+	str.clear();
+	str << "abc" << -2 << U'+' << int8(42) << U'=' << uint16(40) << "  r = " << 40.0r;
+	int32 v1;
+	string_line<char32>(U"-50", 3) >> v1;
+	uint32 v2;
+	string_line<char32>(U"500", 3) >> v2;
+	real v3;
+	string_line<char32>(U"-50.689", 7) >> v3;
+	string_line<char32>(U"50.08", 5) >> v3;
 }
 
 void test_vector()

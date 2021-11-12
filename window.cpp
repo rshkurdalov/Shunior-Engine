@@ -27,13 +27,11 @@ void window::update()
 {
 	vector<int32, 2> position = os_window_content_position(this);
 	vector<uint32, 2> size = os_window_content_size(this);
-	if(bmp.width != size.x || bmp.height != size.y)
+	if(fm.width != size.x || fm.height != size.y)
 	{
 		bmp.resize(size.x, size.y);
 		os_update_window_size(this);
 	}
-	for(uint32 i = 0; i < bmp.width * bmp.height; i++)
-		bmp.data[i] = alpha_color(235, 235, 235, 255);
 	fm.x = position.x;
 	fm.y = position.y;
 	fm.width = size.x;
@@ -44,52 +42,6 @@ void window::update()
 	layout->height = fm.height;
 	bitmap_processor bp;
 	layout->render(layout, vector<int32, 2>(fm.x, fm.y), &bp, &bmp);
-
-	/*bitmap b;
-	b.resize(9, 20);
-	for(uint32 i = 0; i < b.width * b.height; i++)
-		b.data[i] = alpha_color(235, 0, 0, 255);
-	int32 x = 10, y = 10;
-	for(uint32 i = 1; i <= 10000; i++)
-	{
-		bp.fill_opacity_bitmap(b, vector<int32, 2>(x, y), &bmp);
-		x += 10;
-		if(i % 170 == 0)
-		{
-			x = 10;
-			y += 21;
-		}
-	}*/
-
-	/*geometry_path path;
-	path.move(vector<real, 2>(100.0r, 100.0r));
-	path.push_line(vector<real, 2>(200.0r, 100.0r));
-	path.push_elliptic_arc(vector<real, 2>(300.0r, 200.0r), 1.0r, 0.75r, 0.0r, 0.0r);
-	path.move(vector<real, 2>(300.0r, 300.0r));
-	path.push_elliptic_arc(vector<real, 2>(300.0r, 400.0r), 0.5r, 0.75r, 0.25r, 0.0r);
-	path.push_elliptic_arc(vector<real, 2>(300.0r, 300.0r), 0.5r, 0.25r, 0.75r, 0.0r);
-	bp.rasterization = rasterization_mode::outline;
-	bp.line_width = 6.0r;
-	bp.set_solid_color_brush(alpha_color(255, 0, 0, 255));
-	bp.render(path, &bmp);*/
-
-	/*geometry_path path;
-	path.move(vector<real, 2>(10.0r, 10.0r));
-	path.push_line(vector<real, 2>(10.0r, 10.0r));
-	path.push_line(vector<real, 2>(10.0r, 10.0r));
-
-	path.move(vector<real, 2>(50.0r, 50.0r));
-	path.push_line(vector<real, 2>(100.0r, 200.0r));
-	path.push_line(vector<real, 2>(100.0r, 250.0r));
-	path.push_line(vector<real, 2>(100.0r, 150.0r));
-	path.push_line(vector<real, 2>(200.0r, 100.0r));
-	path.push_line(vector<real, 2>(50.0r, 50.0r));
-
-	bp.rasterization = rasterization_mode::outline;
-	bp.line_width = 6.0r;
-	bp.set_solid_color_brush(alpha_color(255, 0, 0, 255));
-	bp.render(path, &bmp);*/
-
 	os_render_window(this);
 }
 

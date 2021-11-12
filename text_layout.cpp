@@ -21,7 +21,7 @@ template<> struct key<glyph_data *>
 	key(char32 code, string &font_name_value, uint32 size, bool italic, uint32 weight)
 		: code(code), size(size), italic(italic), weight(weight)
 	{
-		font_name.insert_range(0, font_name_value.addr, font_name_value.addr + font_name_value.size);
+		font_name << font_name_value;
 	}
 
 	bool operator<(const key &value) const
@@ -57,7 +57,7 @@ void text_layout::insert_text(uint64 idx, string &str, string &font, uint32 font
 	}
 }
 
-void text_layout::update()
+void text_layout::update() //!!!
 {
 	glyph_data *data;
 	for(uint64 i = 0, r; i < glyphs.size; i++)
@@ -137,8 +137,8 @@ vector<int32, 2> text_layout::content_size()
 			{
 				line_height = max(
 					line_height,
-					glyphs.addr[i].data->internal_leading
-						+ glyphs.addr[i].data->ascent + glyphs.addr[i].data->descent);
+					int32(glyphs.addr[i].data->internal_leading
+						+ glyphs.addr[i].data->ascent + glyphs.addr[i].data->descent));
 				line_width += glyphs.addr[i].data->advance.x;
 			}
 			size.x = max(size.x, line_width);
@@ -161,9 +161,9 @@ void text_layout::hit_test_position(uint64 idx, vector<int32, 2> *point, int32 *
 {
 	vector<int32, 2> p(0, int32(height)),
 		text_size = content_size();
-	if(valign == vertical_align::center && height >= text_size.y)
+	if(valign == vertical_align::center && int32(height) >= text_size.y)
 		p.y = (int32(height) + text_size.y) / 2;
-	else if(valign == vertical_align::bottom && height >= text_size.y)
+	else if(valign == vertical_align::bottom && int32(height) >= text_size.y)
 		p.y = text_size.y;
 	int32 line_width = 0;
 	uint64 line_begin = 0, line_end = 0;
@@ -195,14 +195,14 @@ void text_layout::hit_test_position(uint64 idx, vector<int32, 2> *point, int32 *
 			{
 				*line_height = max(
 					*line_height,
-					glyphs.addr[i].data->internal_leading
-						+ glyphs.addr[i].data->ascent + glyphs.addr[i].data->descent);
+					int32(glyphs.addr[i].data->internal_leading
+						+ glyphs.addr[i].data->ascent + glyphs.addr[i].data->descent));
 				line_width += glyphs.addr[i].data->advance.x;
 			}
 			p.y -= *line_height;
-			if(halign == horizontal_align::center && width >= line_width)
+			if(halign == horizontal_align::center && int32(width) >= line_width)
 				p.x = (int32(width) - line_width) / 2;
-			else if(halign == horizontal_align::right && width >= line_width)
+			else if(halign == horizontal_align::right && int32(width) >= line_width)
 				p.x = int32(width) - line_width;
 			point->y = p.y;
 			for(i = line_begin; i < line_end; i++)
@@ -242,7 +242,7 @@ void text_layout::hit_test_point(vector<int32, 2> point, uint64 *idx)
 	}
 	vector<int32, 2> p(0, int32(height)),
 		text_size = content_size();
-	if(valign == vertical_align::center && height >= text_size.y)
+	if(valign == vertical_align::center && int32(height) >= text_size.y)
 		p.y = (int32(height) + text_size.y) / 2;
 	else if(valign == vertical_align::bottom && int32(height) >= text_size.y)
 		p.y = text_size.y;
@@ -275,14 +275,14 @@ void text_layout::hit_test_point(vector<int32, 2> point, uint64 *idx)
 			{
 				line_height = max(
 					line_height,
-					glyphs.addr[i].data->internal_leading
-						+ glyphs.addr[i].data->ascent + glyphs.addr[i].data->descent);
+					int32(glyphs.addr[i].data->internal_leading
+						+ glyphs.addr[i].data->ascent + glyphs.addr[i].data->descent));
 				line_width += glyphs.addr[i].data->advance.x;
 			}
 			p.y -= line_height;
-			if(halign == horizontal_align::center && width >= line_width)
+			if(halign == horizontal_align::center && int32(width) >= line_width)
 				p.x = (int32(width) - line_width) / 2;
-			else if(halign == horizontal_align::right && width >= line_width)
+			else if(halign == horizontal_align::right && int32(width) >= line_width)
 				p.x = int32(width) - line_width;
 			if(point.y >= p.y)
 			{
@@ -329,9 +329,9 @@ void text_layout::render(
 	if(glyphs.size == 0) return;
 	vector<int32, 2> p(point.x, point.y + int32(height)),
 		text_size = content_size();
-	if(valign == vertical_align::center && height >= text_size.y)
+	if(valign == vertical_align::center && int32(height) >= text_size.y)
 		p.y = point.y + (int32(height) + text_size.y) / 2;
-	else if(valign == vertical_align::bottom && height >= text_size.y)
+	else if(valign == vertical_align::bottom && int32(height) >= text_size.y)
 		p.y = point.y + text_size.y;
 	int32 baseline = 0, line_width = 0, line_height = 0;
 	uint64 line_begin = 0, line_end = 0;
@@ -362,15 +362,15 @@ void text_layout::render(
 			{
 				line_height = max(
 					line_height,
-					glyphs.addr[i].data->internal_leading
-						+ glyphs.addr[i].data->ascent + glyphs.addr[i].data->descent);
-				baseline = max(baseline, glyphs.addr[i].data->descent);
+					int32(glyphs.addr[i].data->internal_leading
+						+ glyphs.addr[i].data->ascent + glyphs.addr[i].data->descent));
+				baseline = max(baseline, int32(glyphs.addr[i].data->descent));
 				line_width += glyphs.addr[i].data->advance.x;
 			}
 			p.y -= line_height - baseline;
-			if(halign == horizontal_align::center && width >= line_width)
+			if(halign == horizontal_align::center && int32(width) >= line_width)
 				p.x = point.x + (int32(width) - line_width) / 2;
-			else if(halign == horizontal_align::right && width >= line_width)
+			else if(halign == horizontal_align::right && int32(width) >= line_width)
 				p.x = point.x + int32(width) - line_width;
 			for(i = line_begin; i < line_end; i++)
 			{

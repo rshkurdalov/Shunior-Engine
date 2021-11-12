@@ -91,12 +91,12 @@ struct bitmap_processor
 	void set_solid_color_brush(alpha_color color_value);
 	void set_linear_gradient_brush(
 		gradient_stop *gradient_collection,
-		uint32 size,
+		uint64 size,
 		vector<real, 2> begin,
 		vector<real, 2> end);
 	void set_radial_gradient_brush(
 		gradient_stop *gradient_collection,
-		uint32 size,
+		uint64 size,
 		vector<real, 2> center,
 		vector<real, 2> offset,
 		real rx_value,

@@ -11,4 +11,16 @@
       </ArrayItems>
     </Expand>
   </Type>
+
+  <Type Name="array&lt;char32_t&gt;">
+    <DisplayString>{addr,[size]}</DisplayString>
+    <Expand>
+      <Item Name="size">size</Item>
+      <Item Name="capacity">capacity</Item>
+      <ArrayItems>
+        <Size>size</Size>
+        <ValuePointer>addr</ValuePointer>
+      </ArrayItems>
+    </Expand>
+  </Type>
 </AutoVisualizer>

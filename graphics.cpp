@@ -74,7 +74,7 @@ void bitmap_processor::set_solid_color_brush(alpha_color color_value)
 
 void bitmap_processor::set_linear_gradient_brush(
 	gradient_stop *gradient_collection,
-	uint32 size,
+	uint64 size,
 	vector<real, 2> begin,
 	vector<real, 2> end)
 {
@@ -87,7 +87,7 @@ void bitmap_processor::set_linear_gradient_brush(
 
 void bitmap_processor::set_radial_gradient_brush(
 	gradient_stop *gradient_collection,
-	uint32 size,
+	uint64 size,
 	vector<real, 2> center,
 	vector<real, 2> offset,
 	real rx_value,
@@ -539,17 +539,25 @@ void bitmap_processor::fill_area(rectangle<int32> target_area, bitmap *target)
 	}
 	uint32 o = uint32(255.0r * opacity);
 	alpha_color color_value, *color_addr;
-	for(p.x = p1.x; p.x < p2.x; p.x++)
+	if(brush == brush_type::solid)
 	{
-		for(p.y = p1.y; p.y < p2.y; p.y++)
+		color_value = point_color(0, 0);
+		color_value.a = uint8(uint32(color_value.a) * o / 255);
+	}
+	for(p.y = p1.y; p.y < p2.y; p.y++)
+	{
+		color_addr = &target->data[(int32(target->height) - 1 - p.y) * int32(target->width) + p1.x];
+		for(p.x = p1.x; p.x < p2.x; p.x++, color_addr++)
 		{
-			color_value = point_color(p.x, p.y);
-			color_value.a = uint32(color_value.a) * o / 255;
+			if(brush != brush_type::solid)
+			{
+				color_value = point_color(p.x, p.y);
+				color_value.a = uint8(uint32(color_value.a) * o / 255);
+			}
 			if(color_value.a == 255)
-				target->data[(int32(target->height) - 1 - p.y) * int32(target->width) + p.x] = color_value;
+				*color_addr = color_value;
 			else if(color_value.a != 0)
 			{
-				color_addr = &target->data[(int32(target->height) - 1 - p.y) * int32(target->width) + p.x];
 				color_addr->r = (uint32(color_value.a) * color_value.r + (255 - color_value.a) * color_addr->r) / 255;
 				color_addr->g = (uint32(color_value.a) * color_value.g + (255 - color_value.a) * color_addr->g) / 255;
 				color_addr->b = (uint32(color_value.a) * color_value.b + (255 - color_value.a) * color_addr->b) / 255;
@@ -575,20 +583,21 @@ void bitmap_processor::fill_bitmap(bitmap &source, vector<int32, 2> target_point
 			+ scissor_stack.addr[scissor_stack.size - 1].extent.y);
 	}
 	uint32 i, j, o = uint32(255.0r * opacity);
-	alpha_color color_value, *color_addr;
-	for(p.x = p1.x; p.x < p2.x; p.x++)
+	alpha_color color_value, *color_addr, *source_addr;
+	for(p.y = p1.y; p.y < p2.y; p.y++)
 	{
-		i = uint32(p.x - target_point.x);
-		for(p.y = p1.y; p.y < p2.y; p.y++)
+		j = uint32(p.y - target_point.y);
+		color_addr = &target->data[(int32(target->height) - 1 - p.y) * int32(target->width) + p1.x];
+		source_addr = &source.data[(source.height - 1 - j) * source.width + uint32(p1.x - target_point.x)];
+		for(p.x = p1.x; p.x < p2.x; p.x++, color_addr++, source_addr++)
 		{
-			j = uint32(p.y - target_point.y);
-			color_value = source.data[(source.height - 1 - j) * source.width + i];
-			color_value.a = uint32(color_value.a) * o / 255;
+			color_value = *source_addr;
+			if(o != 255)
+				color_value.a = uint8(uint32(color_value.a) * o / 255);
 			if(color_value.a == 255)
-				target->data[(int32(target->height) - 1 - p.y) * int32(target->width) + p.x] = color_value;
-			else if(source.data[(source.height - 1 - j) * source.width + i].a != 0)
+				*color_addr = color_value;
+			else if((*source_addr).a != 0)
 			{
-				color_addr = &target->data[(int32(target->height) - 1 - p.y) * int32(target->width) + p.x];
 				color_addr->r = (uint32(color_value.a) * color_value.r + (255 - color_value.a) * color_addr->r) / 255;
 				color_addr->g = (uint32(color_value.a) * color_value.g + (255 - color_value.a) * color_addr->g) / 255;
 				color_addr->b = (uint32(color_value.a) * color_value.b + (255 - color_value.a) * color_addr->b) / 255;
@@ -613,24 +622,39 @@ void bitmap_processor::fill_opacity_bitmap(bitmap &source, vector<int32, 2> targ
 		p2.y = min(p2.y, scissor_stack.addr[scissor_stack.size - 1].position.y
 			+ scissor_stack.addr[scissor_stack.size - 1].extent.y);
 	}
-	uint32 i, j, o = uint32(255.0r * opacity);
-	alpha_color color_value, *color_addr;
-	for(p.x = p1.x; p.x < p2.x; p.x++)
+	uint32 j, o = uint32(255.0r * opacity);
+	alpha_color color_value, *color_addr, *source_addr;
+	if(brush == brush_type::solid)
 	{
-		i = uint32(p.x - target_point.x);
-		for(p.y = p1.y; p.y < p2.y; p.y++)
+		color_value = point_color(0, 0);
+		o = o * uint32(color_value.a) / 255;
+	}
+	for(p.y = p1.y; p.y < p2.y; p.y++)
+	{
+		j = uint32(p.y - target_point.y);
+		color_addr = &target->data[(int32(target->height) - 1 - p.y) * int32(target->width) + p1.x];
+		source_addr = &source.data[(source.height - 1 - j) * source.width + uint32(p1.x - target_point.x)];
+		for(p.x = p1.x; p.x < p2.x; p.x++, color_addr++, source_addr++)
 		{
-			j = uint32(p.y - target_point.y);
-			if(source.data[(source.height - 1 - j) * source.width + i].a != 0)
+			if((*source_addr).a != 0)
 			{
-				color_value = point_color(p.x, p.y);
-				color_value.a = uint8(uint32(color_value.a)
-					* uint32(source.data[(source.height - 1 - j) * source.width + i].a) * o / (255 * 255));
-				color_addr = &target->data[(int32(target->height) - 1 - p.y) * int32(target->width) + p.x];
-				color_addr->r = (uint32(color_value.a) * color_value.r + (255 - color_value.a) * color_addr->r) / 255;
-				color_addr->g = (uint32(color_value.a) * color_value.g + (255 - color_value.a) * color_addr->g) / 255;
-				color_addr->b = (uint32(color_value.a) * color_value.b + (255 - color_value.a) * color_addr->b) / 255;
-				color_addr->a = max(color_addr->a, color_value.a);
+				if(brush != brush_type::solid)
+				{
+					color_value = point_color(p.x, p.y);
+					color_value.a = uint8(uint32(color_value.a)
+						* uint32((*source_addr).a) * o / (255 * 255));
+				}
+				else if(o != 255) color_value.a = uint32((*source_addr).a) * o / 255;
+				else color_value.a = (*source_addr).a;
+				if(color_value.a == 255)
+					*color_addr = color_value;
+				else
+				{
+					color_addr->r = (uint32(color_value.a) * color_value.r + (255 - color_value.a) * color_addr->r) / 255;
+					color_addr->g = (uint32(color_value.a) * color_value.g + (255 - color_value.a) * color_addr->g) / 255;
+					color_addr->b = (uint32(color_value.a) * color_value.b + (255 - color_value.a) * color_addr->b) / 255;
+					color_addr->a = max(color_addr->a, color_value.a);
+				}
 			}
 		}
 	}

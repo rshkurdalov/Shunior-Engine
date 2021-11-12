@@ -65,6 +65,8 @@ struct scroll_bar
 
 struct layout_model
 {
+	alpha_color background_color;
+
 	void attach(frame *fm);
 	void render(frame *fm, vector<int32, 2> point, bitmap_processor *bp, bitmap *bmp);
 };

@@ -329,6 +329,15 @@ void os_message_loop()
 #endif
 }
 
+void os_window_render_buffer(window *wnd, void **bits)
+{
+#ifdef _WIN32
+	uint64 idx = windows.binary_search(key<window_data_win32>((HWND)wnd->handler));
+	window_data_win32 *wnd_data = &windows.addr[idx];
+	*bits = wnd_data->bits;
+#endif
+}
+
 void os_render_window(window *wnd)
 {
 #ifdef _WIN32
@@ -467,7 +476,7 @@ bool os_load_glyph(glyph_data *data)
 			}
 			else
 			{
-				for(uint32 iter = 0; iter < curve->cpfx - 2; iter++)
+				for(uint32 iter = 0; int32(iter) < curve->cpfx - 2; iter++)
 				{
 					data->path.push_quadratic_arc(
 						vector<real, 2>(

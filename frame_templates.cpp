@@ -46,6 +46,7 @@ frame *pulled_frame()
 
 void layout_model::attach(frame *fm)
 {
+	background_color = alpha_color(0, 0, 0, 0);
 	fm->padding_left = 0uiabs;
 	fm->padding_bottom = 0uiabs;
 	fm->padding_right = 0uiabs;
@@ -54,5 +55,14 @@ void layout_model::attach(frame *fm)
 
 void layout_model::render(frame *fm, vector<int32, 2> point, bitmap_processor *bp, bitmap *bmp)
 {
-
+	rectangle viewport = frame_viewport(fm),
+		content_viewport = frame_content_viewport(fm);
+	viewport.position -= point;
+	if(!fm->visible
+		|| background_color.a == 0
+		|| viewport.extent.x <= 0 || viewport.extent.y <= 0
+		|| content_viewport.extent.x <= 0 || content_viewport.extent.y <= 0)
+		return;
+	bp->set_solid_color_brush(background_color);
+	bp->fill_area(viewport, bmp);
 }

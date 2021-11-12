@@ -28,6 +28,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="os_api.cpp" />
     <ClCompile Include="graphics.cpp" />
+    <ClCompile Include="parser.cpp" />
     <ClCompile Include="push_button.cpp" />
     <ClCompile Include="real.cpp" />
     <ClCompile Include="scroll_bar.cpp" />
@@ -47,6 +48,7 @@
     <ClInclude Include="frame.h" />
     <ClInclude Include="frame_templates.h" />
     <ClInclude Include="os_api.h" />
+    <ClInclude Include="parser.h" />
     <ClInclude Include="real.h" />
     <ClInclude Include="set.h" />
     <ClInclude Include="string.h" />

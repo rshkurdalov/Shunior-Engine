@@ -11,6 +11,7 @@ void os_update_window_size(window *wnd);
 vector<int32, 2> os_window_content_position(window *wnd);
 vector<uint32, 2> os_window_content_size(window *wnd);
 void os_message_loop();
+void os_window_render_buffer(window *wnd, void **bits);
 void os_render_window(window *wnd);
 bool os_load_glyph(glyph_data *data);
 int64 os_current_timestamp();

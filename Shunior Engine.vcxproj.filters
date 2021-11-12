@@ -20,6 +20,9 @@
     <Filter Include="Исходные файлы\ui">
       <UniqueIdentifier>{b318adda-8372-45d6-a8e8-941d3899b57b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Исходные файлы\data">
+      <UniqueIdentifier>{745f60fd-02d3-47e0-bfc0-e302678f718a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -52,9 +55,6 @@
     <ClCompile Include="text_layout.cpp">
       <Filter>Исходные файлы\graphics</Filter>
     </ClCompile>
-    <ClCompile Include="string.cpp">
-      <Filter>Исходные файлы\global</Filter>
-    </ClCompile>
     <ClCompile Include="hardware.cpp">
       <Filter>Исходные файлы\global</Filter>
     </ClCompile>
@@ -82,13 +82,16 @@
     <ClCompile Include="push_button.cpp">
       <Filter>Исходные файлы\ui</Filter>
     </ClCompile>
+    <ClCompile Include="string.cpp">
+      <Filter>Исходные файлы\data</Filter>
+    </ClCompile>
+    <ClCompile Include="parser.cpp">
+      <Filter>Исходные файлы\data</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="tests.h">
       <Filter>Исходные файлы</Filter>
-    </ClInclude>
-    <ClInclude Include="array.h">
-      <Filter>Исходные файлы\global</Filter>
     </ClInclude>
     <ClInclude Include="global_operators.h">
       <Filter>Исходные файлы\global</Filter>
@@ -129,9 +132,6 @@
     <ClInclude Include="text_layout.h">
       <Filter>Исходные файлы\graphics</Filter>
     </ClInclude>
-    <ClInclude Include="string.h">
-      <Filter>Исходные файлы\global</Filter>
-    </ClInclude>
     <ClInclude Include="hardware.h">
       <Filter>Исходные файлы\global</Filter>
     </ClInclude>
@@ -141,11 +141,20 @@
     <ClInclude Include="real.h">
       <Filter>Исходные файлы\math</Filter>
     </ClInclude>
-    <ClInclude Include="set.h">
-      <Filter>Исходные файлы\global</Filter>
-    </ClInclude>
     <ClInclude Include="timer.h">
       <Filter>Исходные файлы\global</Filter>
+    </ClInclude>
+    <ClInclude Include="string.h">
+      <Filter>Исходные файлы\data</Filter>
+    </ClInclude>
+    <ClInclude Include="set.h">
+      <Filter>Исходные файлы\data</Filter>
+    </ClInclude>
+    <ClInclude Include="array.h">
+      <Filter>Исходные файлы\data</Filter>
+    </ClInclude>
+    <ClInclude Include="parser.h">
+      <Filter>Исходные файлы\data</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
