@@ -582,7 +582,7 @@ void bitmap_processor::fill_bitmap(bitmap &source, vector<int32, 2> target_point
 		p2.y = min(p2.y, scissor_stack.addr[scissor_stack.size - 1].position.y
 			+ scissor_stack.addr[scissor_stack.size - 1].extent.y);
 	}
-	uint32 i, j, o = uint32(255.0r * opacity);
+	uint32 j, o = uint32(255.0r * opacity);
 	alpha_color color_value, *color_addr, *source_addr;
 	for(p.y = p1.y; p.y < p2.y; p.y++)
 	{

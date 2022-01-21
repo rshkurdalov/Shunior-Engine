@@ -88,6 +88,9 @@
     <ClCompile Include="parser.cpp">
       <Filter>Исходные файлы\data</Filter>
     </ClCompile>
+    <ClCompile Include="file.cpp">
+      <Filter>Исходные файлы\data</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="tests.h">
@@ -154,6 +157,9 @@
       <Filter>Исходные файлы\data</Filter>
     </ClInclude>
     <ClInclude Include="parser.h">
+      <Filter>Исходные файлы\data</Filter>
+    </ClInclude>
+    <ClInclude Include="file.h">
       <Filter>Исходные файлы\data</Filter>
     </ClInclude>
   </ItemGroup>

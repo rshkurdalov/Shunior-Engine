@@ -1,5 +1,6 @@
 #include "tests.h"
 #include "string.h"
+#include "parser.h"
 #include "vector.h"
 #include "matrix.h"
 #include "array.h"
@@ -62,6 +63,20 @@ void test_string()
 	real v3;
 	string_line<char32>(U"-50.689", 7) >> v3;
 	string_line<char32>(U"50.08", 5) >> v3;
+
+	char16 str2[] = u"15 89.6 -8 - ab -9. 874yt-14.0";
+	parser p(str2, array_size(str2) - 1, parse_mode::text, string_format::u16);
+	p >> v1;
+	p >> v3;
+	p >> v1;
+	p >> v3;
+	p >> v3;
+	p >> v3;
+	p.position = 0;
+	str.clear();
+	p >> str;
+	str << U' ';
+	p >> str;
 }
 
 void test_vector()

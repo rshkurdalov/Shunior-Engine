@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="file.cpp" />
     <ClCompile Include="flow_layout.cpp" />
     <ClCompile Include="frame.cpp" />
     <ClCompile Include="frame_templates.cpp" />
@@ -43,6 +44,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="array.h" />
+    <ClInclude Include="file.h" />
     <ClInclude Include="hardware.h" />
     <ClInclude Include="linear_algebra.h" />
     <ClInclude Include="frame.h" />

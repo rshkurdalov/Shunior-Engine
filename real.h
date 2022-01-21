@@ -9,10 +9,9 @@ struct real
 
 	real() {}
 
-	template<typename value_type>
-	real(value_type right)
+	real(int8 right)
 	{
-		if(right < value_type(0))
+		if(right < 0)
 		{
 			integer = uint32(-right);
 			negative = true;
@@ -22,6 +21,72 @@ struct real
 			integer = uint32(right);
 			negative = false;
 		}
+		fraction = 0;
+	}
+	real(uint8 right)
+	{
+		integer = uint32(right);
+		negative = false;
+		fraction = 0;
+	}
+	real(int16 right)
+	{
+		if(right < 0)
+		{
+			integer = uint32(-right);
+			negative = true;
+		}
+		else
+		{
+			integer = uint32(right);
+			negative = false;
+		}
+		fraction = 0;
+	}
+	real(uint16 right)
+	{
+		integer = uint32(right);
+		negative = false;
+		fraction = 0;
+	}
+	real(int32 right)
+	{
+		if(right < 0)
+		{
+			integer = uint32(-right);
+			negative = true;
+		}
+		else
+		{
+			integer = uint32(right);
+			negative = false;
+		}
+		fraction = 0;
+	}
+	real(uint32 right)
+	{
+		integer = uint32(right);
+		negative = false;
+		fraction = 0;
+	}
+	real(int64 right)
+	{
+		if(right < 0)
+		{
+			integer = uint32(-right);
+			negative = true;
+		}
+		else
+		{
+			integer = uint32(right);
+			negative = false;
+		}
+		fraction = 0;
+	}
+	real(uint64 right)
+	{
+		integer = uint32(right);
+		negative = false;
 		fraction = 0;
 	}
 

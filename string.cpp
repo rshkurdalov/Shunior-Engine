@@ -81,21 +81,21 @@ string &operator<<(string &target, const char32 *source)
 	return target;
 }
 
-string &operator<<(string &target, string_line<char8> &source)
+string &operator<<(string &target, string_line<char8> source)
 {
 	for(uint64 i = 0; i < source.length; i++)
 		target.push(char32(source.addr[i]));
 	return target;
 }
 
-string &operator<<(string &target, string_line<char16> &source)
+string &operator<<(string &target, string_line<char16> source)
 {
 	for(uint64 i = 0; i < source.length; i++)
 		target.push(char32(source.addr[i]));
 	return target;
 }
 
-string &operator<<(string &target, string_line<char32> &source)
+string &operator<<(string &target, string_line<char32> source)
 {
 	target.insert_range(target.size, source.addr, source.addr + source.length);
 	return target;
@@ -396,13 +396,13 @@ void operator>>(string_line<char8> str, real &value)
 	uint64 idx = 0;
 	while(idx != str.length && str.addr[idx] != '.') idx++;
 	string_line<char8>(str.addr, idx) >> value.integer;
-	uint32 fraction;
+	uint32 fraction = 0;
 	if(idx != str.length)
 	{
 		string_line<char8>(str.addr + idx + 1, str.length - idx - 1) >> fraction;
-		value.fraction = fraction;
+		for(uint32 j = 0; j < 9 - (str.length - idx - 1); fraction *= 10, j++);
 	}
-
+	value.fraction = fraction;
 }
 
 void operator>>(string_line<char16> str, real &value)
@@ -417,12 +417,13 @@ void operator>>(string_line<char16> str, real &value)
 	uint64 idx = 0;
 	while(idx != str.length && str.addr[idx] != u'.') idx++;
 	string_line<char16>(str.addr, idx) >> value.integer;
-	uint32 fraction;
+	uint32 fraction = 0;
 	if(idx != str.length)
 	{
 		string_line<char16>(str.addr + idx + 1, str.length - idx - 1) >> fraction;
-		value.fraction = fraction;
+		for(uint32 j = 0; j < 9 - (str.length - idx - 1); fraction *= 10, j++);
 	}
+	value.fraction = fraction;
 }
 
 void operator>>(string_line<char32> str, real &value)
