@@ -7,6 +7,8 @@
 
 #ifdef _WIN32
 #include <Windows.h>
+#include <Shlwapi.h>
+#pragma comment(lib, "Shlwapi.lib")
 #endif
 
 #ifdef _WIN32
@@ -363,10 +365,7 @@ void os_render_window(window *wnd)
 bool os_load_glyph(glyph_data *data)
 {
 #ifdef _WIN32
-	array<char16> str_win32;
-	str_win32.insert_default(0, data->font_name.size + 1);
-	for(uint64 i = 0; i < data->font_name.size; i++)
-		str_win32.addr[i] = char16(data->font_name.addr[i]);
+	char16 *str_win32 = create_u16sz(data->font_name);
 	HFONT hfont = CreateFont(
 		data->size,
 		0,
@@ -381,7 +380,8 @@ bool os_load_glyph(glyph_data *data)
 		CLIP_DEFAULT_PRECIS,
 		ANTIALIASED_QUALITY,
 		DEFAULT_PITCH,
-		(wchar_t *)str_win32.addr);
+		(wchar_t *)(str_win32));
+	delete[] str_win32;
 	if(hfont == nullptr) return false;
 	HDC hdc = CreateCompatibleDC(nullptr);
 	SelectObject(hdc, hfont);
@@ -596,4 +596,110 @@ void os_update_windows()
 	for(uint64 i = 0; i < windows.size; i++)
 		windows.addr[i].wnd->update();
 }
+
+bool os_filename_exists(string &filename)
+{
+#ifdef _WIN32
+	char16 *str_win32 = create_u16sz(filename);
+	BOOL exists = PathFileExistsW((wchar_t *)(str_win32));
+	delete[] str_win32;
+	if(exists == TRUE) return true;
+	else return false;
+#endif
+}
+
+void os_open_file(file *f)
+{
+#ifdef _WIN32
+	char16 *str_win32 = create_u16sz(f->filename);
+	DWORD access = 0;
+	if(f->read_access) access |= GENERIC_READ;
+	if(f->write_access) access |= GENERIC_WRITE;
+	HANDLE handler = CreateFileW(
+		(wchar_t *)(str_win32),
+		access,
+		0,
+		NULL,
+		OPEN_ALWAYS,
+		FILE_ATTRIBUTE_NORMAL,
+		NULL);
+	delete[] str_win32;
+	if(handler != INVALID_HANDLE_VALUE)
+	{
+		f->status = filestatus::opened;
+		f->position = 0;
+		GetFileSizeEx(handler, (LARGE_INTEGER *)(&f->size));
+		f->handler = handler;
+	}
+#endif
+}
+
+void os_close_file(file *f)
+{
+#ifdef _WIN32
+	CloseHandle(f->handler);
+	f->status = filestatus::closed;
+#endif
+}
+
+void os_resize_file(uint64 size, file *f)
+{
+#ifdef _WIN32
+	LARGE_INTEGER li;
+	li.QuadPart = LONGLONG(size);
+	SetFilePointerEx(HANDLE(f->handler), li, NULL, FILE_BEGIN);
+	SetEndOfFile(HANDLE(f->handler));
+	GetFileSizeEx(HANDLE(f->handler), (LARGE_INTEGER *)(&f->size));
+	if(f->position > f->size) f->position = f->size;
+#endif
+}
+
+uint64 os_read_file(file *f, uint64 size, void *addr)
+{
+#ifdef _WIN32
+	DWORD bytes_read;
+	LARGE_INTEGER li;
+	li.QuadPart = LONGLONG(f->position);
+	SetFilePointerEx(HANDLE(f->handler), li, NULL, FILE_BEGIN);
+	ReadFile(
+		HANDLE(f->handler),
+		addr,
+		DWORD(size),
+		&bytes_read,
+		NULL);
+	f->position += uint64(bytes_read);
+	return uint64(bytes_read);
+#endif
+}
+
+uint64 os_write_file(file *f, void *addr, uint64 size)
+{
+#ifdef _WIN32
+	DWORD bytes_written;
+	LARGE_INTEGER li;
+	li.QuadPart = LONGLONG(f->position);
+	SetFilePointerEx(HANDLE(f->handler), li, NULL, FILE_BEGIN);
+	WriteFile(
+		HANDLE(f->handler),
+		addr,
+		DWORD(size),
+		&bytes_written,
+		NULL);
+	f->position += uint64(bytes_written);
+	GetFileSizeEx(HANDLE(f->handler), (LARGE_INTEGER *)(&f->size));
+	return uint64(bytes_written);
+#endif
+}
+
+bool os_delete_file(string &filename)
+{
+#ifdef _WIN32
+	char16 *str_win32 = create_u16sz(filename);
+	BOOL deleted = DeleteFileW((wchar_t *)(str_win32));
+	delete[] str_win32;
+	if(deleted != 0) return true;
+	else return false;
+#endif
+}
+
 

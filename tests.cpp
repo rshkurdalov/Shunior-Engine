@@ -7,6 +7,7 @@
 #include "frame.h"
 #include "frame_templates.h"
 #include "set.h"
+#include "file.h"
 
 void test_array()
 {
@@ -231,4 +232,24 @@ void test_set()
 	s.insert(3);
 	s.insert(0);
 	s.remove(2);
+}
+
+void test_file()
+{
+	file f;
+	f.read_access = true;
+	f.write_access = true;
+	f.filename << U"C:\\Users\\rshkurdalov\\Download";
+	bool b = f.exists();
+	f.filename << U's';
+	b = f.exists();
+	f.filename << U"\\file1";
+	f.open();
+	f.resize(2000);
+	uint64 n = f.write(f.filename.addr, f.filename.size * sizeof(char32));
+	f.position = 0;
+	string str;
+	str.insert_default(0, f.filename.size);
+	n = f.read(f.filename.size * sizeof(char32), str.addr);
+	f.close();
 }

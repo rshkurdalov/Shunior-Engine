@@ -13,12 +13,13 @@ int __stdcall wWinMain(
 	int nCmdShow)
 {
 	//test_array();
-	test_string();
+	//test_string();
 	//test_vector();
 	//test_matrix();
 	//test_real();
 	//test_linear_algebra();
 	//test_set();
+	//test_file();
 
 	flow_layout fl, fl1;
 	text_field tf, tf1, tf2, tf3, tf4, tf5, tf6;

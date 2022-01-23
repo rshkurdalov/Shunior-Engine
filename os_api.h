@@ -2,6 +2,7 @@
 #include "global_types.h"
 #include "frame_templates.h"
 #include "text_layout.h"
+#include "file.h"
 
 void os_create_window(window *wnd);
 void os_destroy_window(window *wnd);
@@ -19,3 +20,10 @@ void os_copy_text_to_clipboard(string &text);
 void os_copy_text_from_clipboard(string *text);
 void os_update_internal_timer();
 void os_update_windows();
+bool os_filename_exists(string &filename);
+void os_open_file(file *f);
+void os_close_file(file *f);
+void os_resize_file(uint64 size, file *f);
+uint64 os_read_file(file *f, uint64 size, void *addr);
+uint64 os_write_file(file *f, void *addr, uint64 size);
+bool os_delete_file(string &filename);

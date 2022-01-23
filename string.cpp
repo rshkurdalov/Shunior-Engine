@@ -446,3 +446,51 @@ void operator>>(string_line<char32> str, real &value)
 	}
 	value.fraction = fraction;
 }
+
+char8 *create_u8sz(string &str)
+{
+	char8 *addr = new char8[str.size + 1];
+	for(uint64 i = 0; i < str.size; i++)
+		addr[i] = char8(str.addr[i]);
+	addr[str.size] = '\0';
+	return addr;
+}
+
+char16 *create_u16sz(string &str)
+{
+	char16 *addr = new char16[str.size + 1];
+	for(uint64 i = 0; i < str.size; i++)
+		addr[i] = char16(str.addr[i]);
+	addr[str.size] = u'\0';
+	return addr;
+}
+
+char32 *create_u32sz(string &str)
+{
+	char32 *addr = new char32[str.size + 1];
+	for(uint64 i = 0; i < str.size; i++)
+		addr[i] = str.addr[i];
+	addr[str.size] = U'\0';
+	return addr;
+}
+
+uint64 u8sz_length(char8 *str)
+{
+	uint64 length = 0;
+	while(str[length] != '\0') length++;
+	return length;
+}
+
+uint64 u16sz_length(char16 *str)
+{
+	uint64 length = 0;
+	while(str[length] != u'\0') length++;
+	return length;
+}
+
+uint64 u32sz_length(char32 *str)
+{
+	uint64 length = 0;
+	while(str[length] != U'\0') length++;
+	return length;
+}

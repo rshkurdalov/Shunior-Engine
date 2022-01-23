@@ -162,6 +162,9 @@
     <ClInclude Include="file.h">
       <Filter>Исходные файлы\data</Filter>
     </ClInclude>
+    <ClInclude Include="fileset.h">
+      <Filter>Исходные файлы\data</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="dbg_view.natvis">
