@@ -8,6 +8,7 @@
 #include "frame_templates.h"
 #include "set.h"
 #include "file.h"
+#include "fileset.h"
 
 void test_array()
 {
@@ -252,4 +253,64 @@ void test_file()
 	str.insert_default(0, f.filename.size);
 	n = f.read(f.filename.size * sizeof(char32), str.addr);
 	f.close();
+}
+
+void test_fileset()
+{
+	auto dump = [](fileset<int32> &fs, string *str) -> void
+	{
+		str->clear();
+		*str << U"elements:\n";
+		for(fileset_iterator<int32> iter = fs.begin(); iter.idx != -1; iter = fs.next(iter))
+		{
+			*str << U"[" << iter.node.value << U' ' << iter.node.upper << U' ' << iter.node.left << U' ' << iter.node.right << U"]\n";
+		}
+		*str << U"free slots: ";
+		fileset_iterator<int32> iter;
+		iter.idx = fs.free_idx;
+		while(iter.idx != -1)
+		{
+			iter = fs.iterator(iter.idx);
+			*str << iter.idx << U' ';
+			iter.idx = iter.node.left;
+		}
+	};
+	fileset<int32> s;
+	string filename;
+	filename << U"C:\\Users\\rshkurdalov\\Downloads\\file2.fs";
+	s.create(filename);
+	string str;
+	dump(s, &str);
+	s.insert(1);
+	dump(s, &str);
+	s.insert(2);
+	dump(s, &str);
+	s.insert(3);
+	s.insert(3);
+	dump(s, &str);
+	s.remove(key<int32>(3));
+	dump(s, &str);
+
+	s.insert(3);
+	s.remove(2);
+	dump(s, &str);
+
+	s.insert(2);
+	s.clear();
+	dump(s, &str);
+
+	s.insert(2);
+	s.insert(0);
+	s.insert(1);
+	dump(s, &str);
+
+	s.clear();
+	s.insert(1);
+	s.insert(2);
+	s.insert(3);
+	s.insert(0);
+	s.remove(2);
+	dump(s, &str);
+
+	s.close();
 }

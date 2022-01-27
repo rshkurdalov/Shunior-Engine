@@ -20,6 +20,7 @@ int __stdcall wWinMain(
 	//test_linear_algebra();
 	//test_set();
 	//test_file();
+	//test_fileset();
 
 	flow_layout fl, fl1;
 	text_field tf, tf1, tf2, tf3, tf4, tf5, tf6;
