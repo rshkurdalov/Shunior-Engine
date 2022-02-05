@@ -59,7 +59,7 @@ void scroll_bar_model::render(frame *fm, scroll_bar_data *data, vector<int32, 2>
 			content_viewport.position.y - point.y);
 		slider_rect.extent = vector<int32, 2>(slider_size, content_viewport.extent.y);
 	}
-	bp->set_solid_color_brush(alpha_color(127, 127, 127, 255));
+	bp->br.switch_solid_color(alpha_color(127, 127, 127, 255));
 	bp->fill_area(slider_rect, bmp);
 }
 

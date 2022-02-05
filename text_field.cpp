@@ -120,12 +120,12 @@ void text_field_render_glyph(
 	{
 		rect.position = vector<int32, 2>(point.x, point.y - baseline);
 		rect.extent = vector<int32, 2>(gl.data->advance.x, line_height);
-		args->bp->set_solid_color_brush(alpha_color(0, 0, 200, 255));
+		args->bp->br.switch_solid_color(alpha_color(0, 0, 200, 255));
 		args->bp->fill_area(rect, bmp);
 	}
 	if(args->tf->selection_visible && begin <= idx && idx < end)
-		args->bp->set_solid_color_brush(alpha_color(255, 255, 255, 255));
-	else args->bp->set_solid_color_brush(alpha_color(0, 0, 0, 255));
+		args->bp->br.switch_solid_color(alpha_color(255, 255, 255, 255));
+	else args->bp->br.switch_solid_color(alpha_color(0, 0, 0, 255));
 	args->bp->fill_opacity_bitmap(
 		gl.data->bmp,
 		vector<int32, 2>(
@@ -159,7 +159,7 @@ void text_field_render_glyph(
 		caret_rect.extent = vector<real, 2>(2.0r, 0.8r * real(line_height));
 		caret_path.push_rectangle(caret_rect);
 		set_identity_matrix(&args->bp->transform);
-		args->bp->set_solid_color_brush(alpha_color(0, 0, 0, 255));
+		args->bp->br.switch_solid_color(alpha_color(0, 0, 0, 255));
 		args->bp->render(caret_path, bmp);
 	}
 }
@@ -248,7 +248,7 @@ void text_field_data::render(frame *fm, vector<int32, 2> point, bitmap_processor
 		rect_path.push_rectangle(rect);
 		bp->rasterization = rasterization_mode::fill;
 		set_identity_matrix(&bp->transform);
-		bp->set_solid_color_brush(alpha_color(0, 0, 0, 255));
+		bp->br.switch_solid_color(alpha_color(0, 0, 0, 255));
 		bp->render(rect_path, bmp);
 	}
 	scroll.fm.render(&scroll.fm, point, bp, bmp);
@@ -463,11 +463,11 @@ void text_field_model::render(frame *fm, text_field_data *data, vector<int32, 2>
 		geometry_path path;
 		path.push_rectangle(rectangle<real>(viewport));
 		bitmap_processor bp_surface;
-		bp_surface.set_solid_color_brush(alpha_color(255, 255, 255, 255));
+		bp_surface.br.switch_solid_color(alpha_color(255, 255, 255, 255));
 		bp_surface.render(path, &surface);
 		bp_surface.rasterization = rasterization_mode::outline;
 		bp_surface.line_width = 1.0r;
-		bp_surface.set_solid_color_brush(alpha_color(0, 0, 0, 255));
+		bp_surface.br.switch_solid_color(alpha_color(0, 0, 0, 255));
 		bp_surface.render(path, &surface);
 	}
 	bp->fill_bitmap(surface, vector<int32, 2>(fm->x, fm->y) - point, bmp);

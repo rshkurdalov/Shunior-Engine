@@ -47,14 +47,6 @@ enum struct color_interpolation_mode
 	smooth
 };
 
-enum struct brush_type
-{
-	solid,
-	linear_gradient,
-	radial_gradient,
-	bitmap
-};
-
 struct bitmap
 {
 	alpha_color *data;
@@ -66,15 +58,17 @@ struct bitmap
 	void resize(uint32 width_value, uint32 height_value);
 };
 
-struct bitmap_processor
+enum struct brush_type
 {
-	rasterization_mode rasterization;
-	real line_width;
-	matrix<real, 3, 3> transform;
-	array<rectangle<int32>> scissor_stack;
-	real opacity;
-	color_interpolation_mode color_interpolation;
-	brush_type brush;
+	solid,
+	linear_gradient,
+	radial_gradient,
+	bitmap
+};
+
+struct brush
+{
+	brush_type type;
 	alpha_color color;
 	array<gradient_stop> gradients;
 	vector<real, 2> v1;
@@ -85,23 +79,35 @@ struct bitmap_processor
 	matrix<real, 3, 3> bitmap_transform;
 	matrix<real, 3, 3> reverse_transform;
 
-	bitmap_processor();
-	void push_scissor(rectangle<int32> rect);
-	void pop_scissor();
-	void set_solid_color_brush(alpha_color color_value);
-	void set_linear_gradient_brush(
+	void switch_solid_color(alpha_color color_value);
+	void switch_linear_gradient(
 		gradient_stop *gradient_collection,
 		uint64 size,
 		vector<real, 2> begin,
 		vector<real, 2> end);
-	void set_radial_gradient_brush(
+	void switch_radial_gradient(
 		gradient_stop *gradient_collection,
 		uint64 size,
 		vector<real, 2> center,
 		vector<real, 2> offset,
 		real rx_value,
 		real ry_value);
-	void set_bitmap_brush(bitmap *source_bitmap, matrix<real, 3, 3> &bitmap_transform_matrix);
+	void switch_bitmap(bitmap *source_bitmap, matrix<real, 3, 3> &bitmap_transform_matrix);
+};
+
+struct bitmap_processor
+{
+	rasterization_mode rasterization;
+	real line_width;
+	matrix<real, 3, 3> transform;
+	array<rectangle<int32>> scissor_stack;
+	real opacity;
+	color_interpolation_mode color_interpolation;
+	brush br;
+
+	bitmap_processor();
+	void push_scissor(rectangle<int32> rect);
+	void pop_scissor();
 	alpha_color point_color(uint32 x, uint32 y);
 	void render(geometry_path &path, bitmap *bmp);
 	void fill_area(rectangle<int32> target_area, bitmap *target);

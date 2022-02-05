@@ -53,18 +53,18 @@ void push_button_model::render(frame *fm, vector<int32, 2> point, bitmap_process
 			0.07r * real(viewport.extent.y));
 		path.push_rounded_rectangle(rrect);
 		bitmap_processor bp_surface;
-		bp_surface.set_solid_color_brush(alpha_color(0, 0, 0, 255));
+		bp_surface.br.switch_solid_color(alpha_color(0, 0, 0, 255));
 		bp_surface.render(path, &inner_surface);
 		bp_surface.rasterization = rasterization_mode::outline;
 		bp_surface.line_width = 2.0r;
-		bp_surface.set_solid_color_brush(alpha_color(100, 100, 100, 255));
+		bp_surface.br.switch_solid_color(alpha_color(100, 100, 100, 255));
 		bp_surface.render(path, &border_surface);
 	}
 	if(pulled_frame() == fm)
-		bp->set_solid_color_brush(alpha_color(170, 170, 170, 255));
+		bp->br.switch_solid_color(alpha_color(170, 170, 170, 255));
 	else if(hovered_frame() == fm)
-		bp->set_solid_color_brush(alpha_color(185, 185, 185, 255));
-	else bp->set_solid_color_brush(alpha_color(200, 200, 200, 255));
+		bp->br.switch_solid_color(alpha_color(185, 185, 185, 255));
+	else bp->br.switch_solid_color(alpha_color(200, 200, 200, 255));
 	bp->fill_opacity_bitmap(inner_surface, vector<int32, 2>(fm->x, fm->y) - point, bmp);
 	if(pulled_frame() == fm || hovered_frame() == fm)
 	{
@@ -80,7 +80,7 @@ void push_button_model::render(frame *fm, vector<int32, 2> point, bitmap_process
 		position.y = max(position.y, real(viewport.position.y));
 		position.y = min(position.y, real(viewport.position.y + viewport.extent.y));
 		real r = real(max(viewport.extent.x, viewport.extent.y) / 2);
-		bp->set_radial_gradient_brush(stops, array_size(stops), position, vector<real, 2>(0.0r, 0.0r), r, r);
+		bp->br.switch_radial_gradient(stops, array_size(stops), position, vector<real, 2>(0.0r, 0.0r), r, r);
 		bp->color_interpolation = color_interpolation_mode::linear;
 		bp->fill_opacity_bitmap(inner_surface, vector<int32, 2>(fm->x, fm->y) - point, bmp);
 	}

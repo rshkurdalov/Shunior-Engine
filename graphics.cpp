@@ -24,6 +24,51 @@ void bitmap::resize(uint32 width_value, uint32 height_value)
 		data = new alpha_color[width * height];
 }
 
+void brush::switch_solid_color(alpha_color color_value)
+{
+	type = brush_type::solid;
+	color = color_value;
+}
+
+void brush::switch_linear_gradient(
+	gradient_stop *gradient_collection,
+	uint64 size,
+	vector<real, 2> begin,
+	vector<real, 2> end)
+{
+	type = brush_type::linear_gradient;
+	gradients.reset();
+	gradients.insert_range(0, gradient_collection, gradient_collection + size);
+	v1 = begin;
+	v2 = end;
+}
+
+void brush::switch_radial_gradient(
+	gradient_stop *gradient_collection,
+	uint64 size,
+	vector<real, 2> center,
+	vector<real, 2> offset,
+	real rx_value,
+	real ry_value)
+{
+	type = brush_type::radial_gradient;
+	gradients.reset();
+	gradients.insert_range(0, gradient_collection, gradient_collection + size);
+	v1 = center;
+	v2 = offset;
+	rx = rx_value;
+	ry = ry_value;
+}
+
+void brush::switch_bitmap(bitmap *source_bitmap, matrix<real, 3, 3> &bitmap_transform_matrix)
+{
+	type = brush_type::bitmap;
+	bitmap_addr = source_bitmap;
+	bitmap_transform = bitmap_transform_matrix;
+	reverse_transform = bitmap_transform;
+	invert_matrix(&reverse_transform);
+}
+
 bitmap_processor::bitmap_processor()
 {
 	rasterization = rasterization_mode::fill;
@@ -31,7 +76,7 @@ bitmap_processor::bitmap_processor()
 	set_identity_matrix(&transform);
 	opacity = 1.0r;
 	color_interpolation = color_interpolation_mode::flat;
-	set_solid_color_brush(alpha_color(0, 0, 0, 255));
+	br.switch_solid_color(alpha_color(0, 0, 0, 255));
 }
 
 void bitmap_processor::push_scissor(rectangle<int32> rect)
@@ -66,112 +111,67 @@ void bitmap_processor::pop_scissor()
 	scissor_stack.pop();
 }
 
-void bitmap_processor::set_solid_color_brush(alpha_color color_value)
-{
-	brush = brush_type::solid;
-	color = color_value;
-}
-
-void bitmap_processor::set_linear_gradient_brush(
-	gradient_stop *gradient_collection,
-	uint64 size,
-	vector<real, 2> begin,
-	vector<real, 2> end)
-{
-	brush = brush_type::linear_gradient;
-	gradients.reset();
-	gradients.insert_range(0, gradient_collection, gradient_collection + size);
-	v1 = begin;
-	v2 = end;
-}
-
-void bitmap_processor::set_radial_gradient_brush(
-	gradient_stop *gradient_collection,
-	uint64 size,
-	vector<real, 2> center,
-	vector<real, 2> offset,
-	real rx_value,
-	real ry_value)
-{
-	brush = brush_type::radial_gradient;
-	gradients.reset();
-	gradients.insert_range(0, gradient_collection, gradient_collection + size);
-	v1 = center;
-	v2 = offset;
-	rx = rx_value;
-	ry = ry_value;
-}
-
-void bitmap_processor::set_bitmap_brush(bitmap *source_bitmap, matrix<real, 3, 3> &bitmap_transform_matrix)
-{
-	brush = brush_type::bitmap;
-	bitmap_addr = source_bitmap;
-	bitmap_transform = bitmap_transform_matrix;
-	reverse_transform = bitmap_transform;
-	invert_matrix(&reverse_transform);
-}
-
 alpha_color bitmap_processor::point_color(uint32 x, uint32 y)
 {
-	if(brush == brush_type::solid)
+	if(br.type == brush_type::solid)
 	{
-		return color;
+		return br.color;
 	}
-	else if(brush == brush_type::bitmap)
+	else if(br.type == brush_type::bitmap)
 	{
-		matrix<real, 1, 3> mp = vector<real, 3>(real(x) + 0.5r, real(y) + 0.5r, 1.0r) * reverse_transform;
+		matrix<real, 1, 3> mp = vector<real, 3>(real(x) + 0.5r, real(y) + 0.5r, 1.0r) * br.reverse_transform;
 		vector<real, 2> p = vector<real, 2>(mp.m[0][0], mp.m[0][1]);
 		int32 bx = int32(round(p.x)), by = int32(round(p.y));
-		if(bx < 0 || bx >= int32(bitmap_addr->width) || by < 0 || by >= int32(bitmap_addr->height))
+		if(bx < 0 || bx >= int32(br.bitmap_addr->width) || by < 0 || by >= int32(br.bitmap_addr->height))
 			return alpha_color(0, 0, 0, 0);
-		return bitmap_addr->data[(bitmap_addr->height - 1 - uint32(by)) * bitmap_addr->width + uint32(bx)];
+		return br.bitmap_addr->data[(br.bitmap_addr->height - 1 - uint32(by)) * br.bitmap_addr->width + uint32(bx)];
 	}
 	else
 	{
-		if(gradients.size == 0) return alpha_color(0, 0, 0, 0);
+		if(br.gradients.size == 0) return alpha_color(0, 0, 0, 0);
 		vector<real, 2> sample = vector<real, 2>(real(x) + 0.5r, real(y) + 0.5r);
 		real grad;
 		alpha_color color;
 		bool hasColor = true;
-		if(brush == brush_type::linear_gradient)
+		if(br.type == brush_type::linear_gradient)
 		{
-			vector<real, 2> dir = vector_normal(v2 - v1);
-			real a = vector_dot(sample - v1, dir);
-			grad = vector_length(v1 + a * dir - v1) / vector_length(v2 - v1);
+			vector<real, 2> dir = vector_normal(br.v2 - br.v1);
+			real a = vector_dot(sample - br.v1, dir);
+			grad = vector_length(br.v1 + a * dir - br.v1) / vector_length(br.v2 - br.v1);
 			if(a < 0.0r) grad = -grad;
 		}
 		else
 		{
 			real a, b, c, d, k;
 			vector<real, 2> p1, p2;
-			sample -= v1;
-			if(abs(sample.x - v2.x) < 0.1r)
+			sample -= br.v1;
+			if(abs(sample.x - br.v2.x) < 0.1r)
 			{
-				a = ry * ry * (1.0r - v2.x * v2.x / (rx * rx));
+				a = br.ry * br.ry * (1.0r - br.v2.x * br.v2.x / (br.rx * br.rx));
 				if(a < 0.0r) hasColor = false;
 				else
 				{
 					a = root(a, 2);
-					p1.x = v2.x;
+					p1.x = br.v2.x;
 					p1.y = a;
-					p2.x = v2.x;
+					p2.x = br.v2.x;
 					p2.y = -a;
-					a = (sample.y - v2.y) * (p1.y - v2.y);
-					b = (sample.y - v2.y) * (p2.y - v2.y);
+					a = (sample.y - br.v2.y) * (p1.y - br.v2.y);
+					b = (sample.y - br.v2.y) * (p2.y - br.v2.y);
 					if(a < 0.0r && b < 0.0r) hasColor = false;
 					else
 					{
 						if(a < 0.0r || b >= 0.0r && a < b) swap(&p1, &p2);
-						grad = (sample.y - v2.y) / (p1.y - v2.y);
+						grad = (sample.y - br.v2.y) / (p1.y - br.v2.y);
 					}
 				}
 			}
 			else
 			{
-				k = (v2.y - sample.y) / (v2.x - sample.x);
-				a = k * k + ry * ry / (rx * rx);
+				k = (br.v2.y - sample.y) / (br.v2.x - sample.x);
+				a = k * k + br.ry * br.ry / (br.rx * br.rx);
 				b = k * (sample.y - k * sample.x);
-				c = (sample.y - k * sample.x) * (sample.y - k * sample.x) - ry * ry;
+				c = (sample.y - k * sample.x) * (sample.y - k * sample.x) - br.ry * br.ry;
 				d = b * b - a * c;
 				if(d < 0.0r) hasColor = false;
 				else
@@ -181,43 +181,43 @@ alpha_color bitmap_processor::point_color(uint32 x, uint32 y)
 					p1.y = (sample.y - k * sample.x) + k * p1.x;
 					p2.x = -(b + d) / a;
 					p2.y = (sample.y - k * sample.x) + k * p2.x;
-					a = vector_dot(sample - v2, p1 - v2);
-					b = vector_dot(sample - v2, p2 - v2);
+					a = vector_dot(sample - br.v2, p1 - br.v2);
+					b = vector_dot(sample - br.v2, p2 - br.v2);
 					if(a < 0.0r && b < 0.0r) hasColor = false;
 					else
 					{
 						if(a < 0.0r || b >= 0.0r && a < b) swap(&p1, &p2);
-						grad = vector_length(sample - v2) / vector_length(p1 - v2);
+						grad = vector_length(sample - br.v2) / vector_length(p1 - br.v2);
 					}
 				}
 			}
 				
 		}
 		if(!hasColor) return alpha_color(0, 0, 0, 0);
-		if(grad < gradients.addr[0].offset)
-			color = gradients.addr[0].color;
-		else if(grad >= gradients.addr[gradients.size - 1].offset)
-			color = gradients.addr[gradients.size - 1].color;
+		if(grad < br.gradients.addr[0].offset)
+			color = br.gradients.addr[0].color;
+		else if(grad >= br.gradients.addr[br.gradients.size - 1].offset)
+			color = br.gradients.addr[br.gradients.size - 1].color;
 		else
 		{
 			uint32 j = 1;
-			while(grad >= gradients.addr[j].offset) j++;
+			while(grad >= br.gradients.addr[j].offset) j++;
 			if(color_interpolation == color_interpolation_mode::flat)
-				color = gradients.addr[j - 1].color;
+				color = br.gradients.addr[j - 1].color;
 			else
 			{
-				real w = (grad - gradients.addr[j - 1].offset)
-					/ (gradients.addr[j].offset - gradients.addr[j - 1].offset);
+				real w = (grad - br.gradients.addr[j - 1].offset)
+					/ (br.gradients.addr[j].offset - br.gradients.addr[j - 1].offset);
 				if(color_interpolation == color_interpolation_mode::smooth)
 					w = w * w * (3.0r - 2.0r * w);
-				color.r = uint8(round(real(gradients.addr[j - 1].color.r)) * (1.0r - w)
-					+ real(gradients.addr[j].color.r) * w);
-				color.g = uint8(round(real(gradients.addr[j - 1].color.g)) * (1.0r - w)
-					+ real(gradients.addr[j].color.g) * w);
-				color.b = uint8(round(real(gradients.addr[j - 1].color.b)) * (1.0r - w)
-					+ real(gradients.addr[j].color.b) * w);
-				color.a = uint8(round(real(gradients.addr[j - 1].color.a)) * (1.0r - w)
-					+ real(gradients.addr[j].color.a) * w);
+				color.r = uint8(round(real(br.gradients.addr[j - 1].color.r)) * (1.0r - w)
+					+ real(br.gradients.addr[j].color.r) * w);
+				color.g = uint8(round(real(br.gradients.addr[j - 1].color.g)) * (1.0r - w)
+					+ real(br.gradients.addr[j].color.g) * w);
+				color.b = uint8(round(real(br.gradients.addr[j - 1].color.b)) * (1.0r - w)
+					+ real(br.gradients.addr[j].color.b) * w);
+				color.a = uint8(round(real(br.gradients.addr[j - 1].color.a)) * (1.0r - w)
+					+ real(br.gradients.addr[j].color.a) * w);
 			}
 		}
 		return color;
@@ -539,7 +539,7 @@ void bitmap_processor::fill_area(rectangle<int32> target_area, bitmap *target)
 	}
 	uint32 o = uint32(255.0r * opacity);
 	alpha_color color_value, *color_addr;
-	if(brush == brush_type::solid)
+	if(br.type == brush_type::solid)
 	{
 		color_value = point_color(0, 0);
 		color_value.a = uint8(uint32(color_value.a) * o / 255);
@@ -549,7 +549,7 @@ void bitmap_processor::fill_area(rectangle<int32> target_area, bitmap *target)
 		color_addr = &target->data[(int32(target->height) - 1 - p.y) * int32(target->width) + p1.x];
 		for(p.x = p1.x; p.x < p2.x; p.x++, color_addr++)
 		{
-			if(brush != brush_type::solid)
+			if(br.type != brush_type::solid)
 			{
 				color_value = point_color(p.x, p.y);
 				color_value.a = uint8(uint32(color_value.a) * o / 255);
@@ -624,7 +624,7 @@ void bitmap_processor::fill_opacity_bitmap(bitmap &source, vector<int32, 2> targ
 	}
 	uint32 j, o = uint32(255.0r * opacity);
 	alpha_color color_value, *color_addr, *source_addr;
-	if(brush == brush_type::solid)
+	if(br.type == brush_type::solid)
 	{
 		color_value = point_color(0, 0);
 		o = o * uint32(color_value.a) / 255;
@@ -638,7 +638,7 @@ void bitmap_processor::fill_opacity_bitmap(bitmap &source, vector<int32, 2> targ
 		{
 			if((*source_addr).a != 0)
 			{
-				if(brush != brush_type::solid)
+				if(br.type != brush_type::solid)
 				{
 					color_value = point_color(p.x, p.y);
 					color_value.a = uint8(uint32(color_value.a)

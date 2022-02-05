@@ -91,6 +91,9 @@
     <ClCompile Include="file.cpp">
       <Filter>Исходные файлы\data</Filter>
     </ClCompile>
+    <ClCompile Include="web_server.cpp">
+      <Filter>Исходные файлы\global</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="tests.h">
@@ -164,6 +167,9 @@
     </ClInclude>
     <ClInclude Include="fileset.h">
       <Filter>Исходные файлы\data</Filter>
+    </ClInclude>
+    <ClInclude Include="web_server.h">
+      <Filter>Исходные файлы\global</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

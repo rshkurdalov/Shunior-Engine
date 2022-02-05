@@ -25,6 +25,7 @@
     <ClCompile Include="frame_templates.cpp" />
     <ClCompile Include="geometry.cpp" />
     <ClCompile Include="hardware.cpp" />
+    <ClCompile Include="web_server.cpp" />
     <ClCompile Include="linear_algebra.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="os_api.cpp" />
@@ -47,6 +48,7 @@
     <ClInclude Include="file.h" />
     <ClInclude Include="fileset.h" />
     <ClInclude Include="hardware.h" />
+    <ClInclude Include="web_server.h" />
     <ClInclude Include="linear_algebra.h" />
     <ClInclude Include="frame.h" />
     <ClInclude Include="frame_templates.h" />

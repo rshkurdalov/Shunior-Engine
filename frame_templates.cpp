@@ -63,6 +63,6 @@ void layout_model::render(frame *fm, vector<int32, 2> point, bitmap_processor *b
 		|| viewport.extent.x <= 0 || viewport.extent.y <= 0
 		|| content_viewport.extent.x <= 0 || content_viewport.extent.y <= 0)
 		return;
-	bp->set_solid_color_brush(background_color);
+	bp->br.switch_solid_color(background_color);
 	bp->fill_area(viewport, bmp);
 }
