@@ -154,3 +154,96 @@ matrix<value_type, rows, columns> operator/(
 {
 	return left /= right;
 }
+
+template<typename value_type> struct dynamic_matrix
+{
+	value_type *addr;
+	uint64 rows;
+	uint64 columns;
+
+	dynamic_matrix()
+	{
+		addr = nullptr;
+		rows = 0;
+		columns = 0;
+	}
+	
+	~dynamic_matrix()
+	{
+		if(addr != nullptr)
+			delete[] addr;
+	}
+
+	void insert_rows(uint64 insert_idx, uint64 insert_count)
+	{
+		rows += insert_count;
+		if(columns == 0) return;
+		value_type *new_addr = new value_type[rows * columns];
+		for(uint64 i = 0; i < insert_idx; i++)
+			for(uint64 j = 0; j < columns; j++)
+				new_addr[i * columns + j] = addr[i * columns + j];
+		for(uint64 i = insert_idx; i < rows - insert_count; i++)
+			for(uint64 j = 0; j < columns; j++)
+				new_addr[(i + insert_count) * columns + j] = addr[i * columns + j];
+		if(addr != nullptr) delete[] addr;
+		addr = new_addr;
+	}
+
+	void remove_rows(uint64 remove_idx, uint64 remove_count)
+	{
+		rows -= remove_count;
+		if(rows == 0 || columns == 0)
+		{
+			if(addr != nullptr) delete[] addr;
+			return;
+		}
+		value_type *new_addr = new value_type[rows * columns];
+		for(uint64 i = 0; i < remove_idx; i++)
+			for(uint64 j = 0; j < columns; j++)
+				new_addr[i * columns + j] = addr[i * columns + j];
+		for(uint64 i = remove_idx; i < rows; i++)
+			for(uint64 j = 0; j < columns; j++)
+				new_addr[i * columns + j] = addr[(i + remove_count) * columns + j];
+		delete[] addr;
+		addr = new_addr;
+	}
+
+	void insert_columns(uint64 insert_idx, uint64 insert_count)
+	{
+		columns += insert_count;
+		if(rows == 0) return;
+		value_type *new_addr = new value_type[rows * columns];
+		for(uint64 i = 0; i < rows; i++)
+			for(uint64 j = 0; j < insert_idx; j++)
+				new_addr[i * columns + j] = addr[i * columns + j];
+		for(uint64 i = 0; i < rows; i++)
+			for(uint64 j = insert_idx; j < columns - insert_count; j++)
+				new_addr[i * columns + j + insert_count] = addr[i * columns + j];
+		if(addr != nullptr) delete[] addr;
+		addr = new_addr;
+	}
+
+	void remove_columns(uint64 remove_idx, uint64 remove_count)
+	{
+		columns -= remove_count;
+		if(rows == 0 || columns == 0)
+		{
+			if(addr != nullptr) delete[] addr;
+			return;
+		}
+		value_type *new_addr = new value_type[rows * columns];
+		for(uint64 i = 0; i < rows; i++)
+			for(uint64 j = 0; j < remove_idx; j++)
+				new_addr[i * columns + j] = addr[i * columns + j];
+		for(uint64 i = 0; i < rows; i++)
+			for(uint64 j = remove_idx; j < columns; j++)
+				new_addr[i * columns + j] = addr[i * columns + j + remove_count];
+		delete[] addr;
+		addr = new_addr;
+	}
+
+	value_type &at(uint64 row_idx, uint64 column_idx)
+	{
+		return addr[row_idx * columns + column_idx];
+	}
+};

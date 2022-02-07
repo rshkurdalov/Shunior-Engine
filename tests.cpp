@@ -219,7 +219,9 @@ void test_ui()
 		*tf3 = new text_field(),
 		*tf4 = new text_field(),
 		*tf5 = new text_field(),
-		*tf6 = new text_field();
+		*tf6 = new text_field(),
+		*tf7 = new text_field(),
+		*tf8 = new text_field();
 	push_button *pb = new push_button();
 
 	// fl
@@ -274,7 +276,7 @@ void test_ui()
 	tf2->data.insert(text);
 	tf2->fm.width_desc = 100uiauto;
 	tf2->fm.height_desc = 100uiauto;
-	tf2->fm.min_width = 100;
+	//tf2->fm.min_width = 100;
 	tf2->fm.min_height = 30;
 	tf2->data.editable = true;
 	tf2->fm.focusable = true;
@@ -322,7 +324,7 @@ void test_ui()
 	tf5->data.insert(text);
 	tf5->fm.width_desc = 100uiabs;
 	tf5->fm.height_desc = 1.0uirel;
-	tf5->fm.min_width = 100;
+	//tf5->fm.min_width = 100;
 	tf5->fm.min_height = 30;
 	tf5->data.editable = true;
 	tf5->fm.focusable = true;
@@ -346,9 +348,65 @@ void test_ui()
 	fl->fm.margin_right = 0uiabs;
 	fl->fm.margin_top = 0uiabs;
 	fl->model.background_color = alpha_color(235, 235, 235, 255);
+	fl->data.direction = flow_axis::y;
+
+	/*Grid layout test*/
+
+	grid_layout *gl = new grid_layout();
+	gl->fm.margin_left = 0uiabs;
+	gl->fm.margin_bottom = 0uiabs;
+	gl->fm.margin_right = 0uiabs;
+	gl->fm.margin_top = 0uiabs;
+	gl->model.background_color = alpha_color(235, 235, 235, 255);
+
+	gl->data.insert_row(0, 100uiabs);
+	gl->data.insert_row(1, 100uiauto);
+	gl->data.growth_row = 1;
+	gl->data.insert_row(2, 0.2uirel);
+	
+	gl->data.insert_column(0, 100uiabs);
+	gl->data.insert_column(1, 100uiauto);
+	gl->data.growth_column = 1;
+	gl->data.insert_column(2, 50uiauto);
+
+	tf->fm.width_desc = 0.5uirel;
+	tf->fm.height_desc = 0.5uirel;
+	gl->data.frames.at(0, 0) = grid_layout_frame(&tf->fm, horizontal_align::center, vertical_align::center);
+
+	tf1->fm.width_desc = 1.0uirel;
+	tf1->fm.height_desc = 1.0uirel;
+	gl->data.frames.at(0, 1) = grid_layout_frame(&tf1->fm, horizontal_align::center, vertical_align::center);
+
+	tf2->fm.width_desc = 1.0uirel;
+	tf2->fm.height_desc = 1.0uirel;
+	gl->data.frames.at(0, 2) = grid_layout_frame(&tf2->fm, horizontal_align::center, vertical_align::center);
+
+	tf3->fm.width_desc = 1.0uirel;
+	tf3->fm.height_desc = 1.0uirel;
+	gl->data.frames.at(1, 0) = grid_layout_frame(&tf3->fm, horizontal_align::center, vertical_align::center);
+
+	tf4->fm.width_desc = 1.0uirel;
+	tf4->fm.height_desc = 1.0uirel;
+	gl->data.frames.at(1, 1) = grid_layout_frame(&tf4->fm, horizontal_align::center, vertical_align::center);
+
+	tf5->fm.width_desc = 1.0uirel;
+	tf5->fm.height_desc = 1.0uirel;
+	gl->data.frames.at(1, 2) = grid_layout_frame(&tf5->fm, horizontal_align::center, vertical_align::center);
+
+	tf6->fm.width_desc = 1.0uirel;
+	tf6->fm.height_desc = 1.0uirel;
+	gl->data.frames.at(2, 0) = grid_layout_frame(&tf6->fm, horizontal_align::center, vertical_align::center);
+
+	tf7->fm.width_desc = 1.0uirel;
+	tf7->fm.height_desc = 1.0uirel;
+	gl->data.frames.at(2, 1) = grid_layout_frame(&tf7->fm, horizontal_align::center, vertical_align::center);
+
+	tf8->fm.width_desc = 1.0uirel;
+	tf8->fm.height_desc = 1.0uirel;
+	gl->data.frames.at(2, 2) = grid_layout_frame(&tf8->fm, horizontal_align::center, vertical_align::center);
 
 	window *wnd = new window();
-	wnd->layout = &fl->fm;
+	wnd->layout = &gl->fm;
 	wnd->open();
 	wnd->update();
 }

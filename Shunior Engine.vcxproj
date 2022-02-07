@@ -24,6 +24,7 @@
     <ClCompile Include="frame.cpp" />
     <ClCompile Include="frame_templates.cpp" />
     <ClCompile Include="geometry.cpp" />
+    <ClCompile Include="grid_layout.cpp" />
     <ClCompile Include="hardware.cpp" />
     <ClCompile Include="web_server.cpp" />
     <ClCompile Include="linear_algebra.cpp" />

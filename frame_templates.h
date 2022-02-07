@@ -78,6 +78,8 @@ struct flow_layout_frame
 	vertical_align valign;
 	bool line_break;
 
+	flow_layout_frame() {}
+
 	flow_layout_frame(
 		frame *fm,
 		horizontal_align halign,
@@ -118,6 +120,59 @@ struct flow_layout
 	layout_model model;
 
 	flow_layout();
+};
+
+struct grid_layout_frame
+{
+	frame *fm;
+	horizontal_align halign;
+	vertical_align valign;
+
+	grid_layout_frame() {}
+
+	grid_layout_frame(
+		frame *fm,
+		horizontal_align halign,
+		vertical_align valign)
+		: fm(fm),
+		halign(halign),
+		valign(valign) {}
+};
+
+struct grid_layout_data
+{
+	array<ui_size> rows_size;
+	array<ui_size> columns_size;
+	dynamic_matrix<grid_layout_frame> frames;
+	uint64 growth_row;
+	uint64 growth_column;
+	scroll_bar xscroll;
+	scroll_bar yscroll;
+
+	void attach(frame *fm);
+	void insert_row(uint32 insert_idx, ui_size size);
+	void remove_row(uint32 remove_idx);
+	void insert_column(uint32 insert_idx, ui_size size);
+	void remove_column(uint32 remove_idx);
+	void subframes(frame *fm, array<frame *> *frames_addr);
+	vector<uint32, 2> content_size(frame *fm, uint32 viewport_width, uint32 viewport_height);
+	void update_layout(frame *fm);
+	void render(frame *fm, vector<int32, 2> point, bitmap_processor *bp, bitmap *bmp);
+	void mouse_wheel_rotate(frame *fm);
+};
+
+void grid_layout_subframes(frame *fm, array<frame *> *frames);
+vector<uint32, 2> grid_layout_content_size(frame *fm, uint32 viewport_width, uint32 viewport_height);
+void grid_layout_render(frame *fm, vector<int32, 2> point, bitmap_processor *bp, bitmap *bmp);
+void grid_layout_mouse_wheel_rotate(frame *fm);
+
+struct grid_layout
+{
+	frame fm;
+	grid_layout_data data;
+	layout_model model;
+
+	grid_layout();
 };
 
 struct text_field_data

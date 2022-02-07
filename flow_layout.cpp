@@ -111,6 +111,62 @@ void flow_layout_evaluate_metrics(flow_layout_metrics *metrics)
 			metrics->line_metrics.push(line);
 		}
 	}
+	else
+	{
+		for(uint64 i = 0; i < metrics->fl->frames.size; i++)
+		{
+			flf = &metrics->fl->frames.addr[i];
+			if(metrics->fm->width_desc.type == ui_size_type::autosize
+				&& flf->fm->width_desc.type == ui_size_type::relative)
+			{
+				if(flf->fm->height_desc.type == ui_size_type::autosize)
+					size.y = flf->fm->max_height;
+				else size.y = resolve_ui_size(flf->fm->height_desc, metrics->viewport_height);
+				size.y = min(max(flf->fm->min_height, size.y), flf->fm->max_height);
+				size.y -= resolve_ui_size(flf->fm->margin_bottom, size.y)
+					+ resolve_ui_size(flf->fm->padding_bottom, size.y)
+					+ resolve_ui_size(flf->fm->margin_top, size.y)
+					+ resolve_ui_size(flf->fm->padding_top, size.y);
+				size.x = flf->fm->max_width;
+				size.x -= resolve_ui_size(flf->fm->margin_left, size.x)
+					+ resolve_ui_size(flf->fm->padding_left, size.x)
+					+ resolve_ui_size(flf->fm->margin_right, size.x)
+					+ resolve_ui_size(flf->fm->padding_right, size.x);
+				size = flf->fm->content_size(flf->fm, size.x, size.y);
+				size = content_size_to_frame_size(flf->fm, size.x, size.y);
+				if(flf->fm->height_desc.type != ui_size_type::autosize)
+					size.y = resolve_ui_size(flf->fm->height_desc, metrics->viewport_height);
+				size.x = min(max(flf->fm->min_width, size.x), flf->fm->max_width);
+				size.y = min(max(flf->fm->min_height, size.y), flf->fm->max_height);
+			}
+			else size = evaluate_frame_size(flf->fm, metrics->viewport_width, metrics->viewport_height);
+			if(metrics->fl->multiline
+				&& i != end_idx
+				&& (flf->line_break
+					|| uint32(flf->valign) < uint32(last_valign)
+					|| line.size1 + line.size2 + line.size3 + (int32)size.y > metrics->viewport_height))
+			{
+				line.frame_count = i - end_idx;
+				metrics->content_height = max(metrics->content_height, line.size1 + line.size2 + line.size3);
+				metrics->content_width += line.linespace;
+				metrics->line_metrics.push(line);
+				end_idx = i;
+				line = flow_layout_line_metrics();
+			}
+			last_valign = flf->valign;
+			if(flf->valign == vertical_align::bottom) line.size1 += int32(size.y);
+			else if(flf->valign == vertical_align::center) line.size2 += int32(size.y);
+			else line.size3 += int32(size.y);
+			line.linespace = max(line.linespace, int32(size.x));
+		}
+		if(end_idx != metrics->fl->frames.size)
+		{
+			line.frame_count = metrics->fl->frames.size - end_idx;
+			metrics->content_height = max(metrics->content_height, line.size1 + line.size2 + line.size3);
+			metrics->content_width += line.linespace;
+			metrics->line_metrics.push(line);
+		}
+	}
 }
 
 vector<uint32, 2> flow_layout_data::content_size(frame *fm, uint32 viewport_width, uint32 viewport_height)
@@ -196,6 +252,11 @@ void flow_layout_data::update_layout(frame *fm)
 			offset3 = max(
 				metrics.viewport_width - metrics.line_metrics.addr[i].size3,
 				offset2 + metrics.line_metrics.addr[i].size2);
+			if(offset3 + metrics.line_metrics.addr[i].size3 > metrics.viewport_width)
+			{
+				offset3 = metrics.viewport_width - metrics.line_metrics.addr[i].size3;
+				offset2 = offset3 - metrics.line_metrics.addr[i].size2;
+			}
 			for(uint64 j = metrics.line_metrics.addr[i].frame_count; j != 0; j--, fi++)
 			{
 				if(fm->height_desc.type == ui_size_type::autosize
@@ -236,6 +297,75 @@ void flow_layout_data::update_layout(frame *fm)
 			}
 			if(offset == flow_offset::left)
 				line_position.y += metrics.line_metrics.addr[i].linespace;
+		}
+	}
+	else
+	{
+		if(offset == flow_offset::right)
+			line_position = vector<int32, 2>(
+				content_viewport.position.x,
+				content_viewport.position.y);
+		else line_position = vector<int32, 2>(
+			content_viewport.position.x + content_viewport.extent.x,
+			content_viewport.position.y);
+		for(uint64 i = 0; i < metrics.line_metrics.size; i++)
+		{
+			if(offset == flow_offset::left)
+				line_position.x -= metrics.line_metrics.addr[i].linespace;
+			offset1 = 0;
+			offset2 = max(
+				(metrics.viewport_height - metrics.line_metrics.addr[i].size2) / 2,
+				metrics.line_metrics.addr[i].size1);
+			if(metrics.line_metrics.addr[i].size2 == 0)
+				offset2 = metrics.line_metrics.addr[i].size1;
+			offset3 = max(
+				metrics.viewport_height - metrics.line_metrics.addr[i].size3,
+				offset2 + metrics.line_metrics.addr[i].size2);
+			if(offset3 + metrics.line_metrics.addr[i].size3 > metrics.viewport_height)
+			{
+				offset3 = metrics.viewport_height - metrics.line_metrics.addr[i].size3;
+				offset2 = offset3 - metrics.line_metrics.addr[i].size2;
+			}
+			for(uint64 j = metrics.line_metrics.addr[i].frame_count; j != 0; j--, fi++)
+			{
+				if(fm->width_desc.type == ui_size_type::autosize
+					&& frames.addr[fi].fm->width_desc.type == ui_size_type::relative)
+					size = evaluate_frame_size(
+						frames.addr[fi].fm,
+						metrics.line_metrics.addr[i].linespace,
+						metrics.viewport_height);
+				else size = evaluate_frame_size(
+					frames.addr[fi].fm,
+					metrics.viewport_width,
+					metrics.viewport_height);
+				frames.addr[fi].fm->width = size.x;
+				frames.addr[fi].fm->height = size.y;
+				if(frames.addr[fi].valign == vertical_align::bottom)
+				{
+					frames.addr[fi].fm->y = line_position.y + offset1;
+					offset1 += int32(frames.addr[fi].fm->height);
+				}
+				else if(frames.addr[fi].valign == vertical_align::center)
+				{
+					frames.addr[fi].fm->y = line_position.y + offset2;
+					offset2 += int32(frames.addr[fi].fm->height);
+				}
+				else
+				{
+					frames.addr[fi].fm->y = line_position.y + offset3;
+					offset3 += int32(frames.addr[fi].fm->height);
+				}
+				if(frames.addr[fi].halign == horizontal_align::right)
+					frames.addr[fi].fm->x = line_position.x
+						+ metrics.line_metrics.addr[i].linespace
+						- int32(frames.addr[fi].fm->width);
+				else if(frames.addr[fi].halign == horizontal_align::center)
+					frames.addr[fi].fm->x = line_position.x
+						+ (metrics.line_metrics.addr[i].linespace - int32(frames.addr[fi].fm->width)) / 2;
+				else frames.addr[fi].fm->x = line_position.x;
+			}
+			if(offset == flow_offset::right)
+				line_position.x += metrics.line_metrics.addr[i].linespace;
 		}
 	}
 }

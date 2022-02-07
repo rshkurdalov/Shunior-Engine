@@ -94,6 +94,9 @@
     <ClCompile Include="web_server.cpp">
       <Filter>Исходные файлы\global</Filter>
     </ClCompile>
+    <ClCompile Include="grid_layout.cpp">
+      <Filter>Исходные файлы\ui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="tests.h">
