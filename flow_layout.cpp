@@ -252,7 +252,8 @@ void flow_layout_data::update_layout(frame *fm)
 			offset3 = max(
 				metrics.viewport_width - metrics.line_metrics.addr[i].size3,
 				offset2 + metrics.line_metrics.addr[i].size2);
-			if(offset3 + metrics.line_metrics.addr[i].size3 > metrics.viewport_width)
+			if(metrics.content_width <= metrics.viewport_width
+				&& offset3 + metrics.line_metrics.addr[i].size3 > metrics.viewport_width)
 			{
 				offset3 = metrics.viewport_width - metrics.line_metrics.addr[i].size3;
 				offset2 = offset3 - metrics.line_metrics.addr[i].size2;
@@ -321,7 +322,8 @@ void flow_layout_data::update_layout(frame *fm)
 			offset3 = max(
 				metrics.viewport_height - metrics.line_metrics.addr[i].size3,
 				offset2 + metrics.line_metrics.addr[i].size2);
-			if(offset3 + metrics.line_metrics.addr[i].size3 > metrics.viewport_height)
+			if(metrics.content_height <= metrics.viewport_height
+				&& offset3 + metrics.line_metrics.addr[i].size3 > metrics.viewport_height)
 			{
 				offset3 = metrics.viewport_height - metrics.line_metrics.addr[i].size3;
 				offset2 = offset3 - metrics.line_metrics.addr[i].size2;

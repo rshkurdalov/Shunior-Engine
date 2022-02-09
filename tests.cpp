@@ -397,13 +397,13 @@ void test_ui()
 	tf6->fm.height_desc = 1.0uirel;
 	gl->data.frames.at(2, 0) = grid_layout_frame(&tf6->fm, horizontal_align::center, vertical_align::center);
 
-	tf7->fm.width_desc = 1.0uirel;
+	/*tf7->fm.width_desc = 1.0uirel;
 	tf7->fm.height_desc = 1.0uirel;
 	gl->data.frames.at(2, 1) = grid_layout_frame(&tf7->fm, horizontal_align::center, vertical_align::center);
 
 	tf8->fm.width_desc = 1.0uirel;
 	tf8->fm.height_desc = 1.0uirel;
-	gl->data.frames.at(2, 2) = grid_layout_frame(&tf8->fm, horizontal_align::center, vertical_align::center);
+	gl->data.frames.at(2, 2) = grid_layout_frame(&tf8->fm, horizontal_align::center, vertical_align::center);*/
 
 	window *wnd = new window();
 	wnd->layout = &gl->fm;

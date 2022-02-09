@@ -11,6 +11,8 @@ void grid_layout_data::insert_row(uint32 insert_idx, ui_size size)
 {
 	rows_size.insert(insert_idx, size);
 	frames.insert_rows(insert_idx, 1);
+	for(uint64 j = 0; j < frames.columns; j++)
+		frames.at(insert_idx, j).fm = nullptr;
 }
 
 void grid_layout_data::remove_row(uint32 remove_idx)
@@ -23,6 +25,8 @@ void grid_layout_data::insert_column(uint32 insert_idx, ui_size size)
 {
 	columns_size.insert(insert_idx, size);
 	frames.insert_columns(insert_idx, 1);
+	for(uint64 i = 0; i < frames.rows; i++)
+		frames.at(i, insert_idx).fm = nullptr;
 }
 
 void grid_layout_data::remove_column(uint32 remove_idx)
@@ -36,7 +40,8 @@ void grid_layout_data::subframes(frame *fm, array<frame *> *frames_addr)
 	frames_addr->push(&xscroll.fm);
 	frames_addr->push(&yscroll.fm);
 	for(uint64 i = 0; i < frames.rows * frames.columns; i++)
-		frames_addr->push(frames.addr[i].fm);
+		if(frames.addr[i].fm != nullptr)
+			frames_addr->push(frames.addr[i].fm);
 }
 
 struct grid_layout_metrics
@@ -81,6 +86,7 @@ void grid_layout_evaluate_metrics(grid_layout_metrics *metrics)
 		{
 			if(j == metrics->gl->growth_column) continue;
 			glf = &metrics->gl->frames.at(i, j);
+			if(glf->fm == nullptr) continue;
 			if(metrics->gl->rows_size.addr[i].type == ui_size_type::autosize
 				&& metrics->gl->columns_size.addr[j].type == ui_size_type::autosize)
 			{
@@ -275,18 +281,21 @@ void grid_layout_data::update_layout(frame *fm)
 		for(uint64 j = 0; j < columns_size.size; j++)
 		{
 			glf = &frames.at(i, j);
-			glf->fm->width = resolve_ui_size(glf->fm->width_desc, metrics.columns_size.addr[j]);
-			glf->fm->height = resolve_ui_size(glf->fm->height_desc, metrics.rows_size.addr[i]);
-			if(glf->halign == horizontal_align::left)
-				glf->fm->x = position.x;
-			else if(glf->halign == horizontal_align::center)
-				glf->fm->x = position.x + (metrics.columns_size.addr[j] - glf->fm->width) / 2;
-			else glf->fm->x = position.x + metrics.columns_size.addr[j] - glf->fm->width;
-			if(glf->valign == vertical_align::bottom)
-				glf->fm->y = position.y;
-			else if(glf->valign == vertical_align::center)
-				glf->fm->y = position.y + (metrics.rows_size.addr[i] - glf->fm->height) / 2;
-			else glf->fm->y = position.y + metrics.rows_size.addr[i] - glf->fm->height;
+			if(glf->fm != nullptr)
+			{
+				glf->fm->width = resolve_ui_size(glf->fm->width_desc, metrics.columns_size.addr[j]);
+				glf->fm->height = resolve_ui_size(glf->fm->height_desc, metrics.rows_size.addr[i]);
+				if(glf->halign == horizontal_align::left)
+					glf->fm->x = position.x;
+				else if(glf->halign == horizontal_align::center)
+					glf->fm->x = position.x + (metrics.columns_size.addr[j] - glf->fm->width) / 2;
+				else glf->fm->x = position.x + metrics.columns_size.addr[j] - glf->fm->width;
+				if(glf->valign == vertical_align::bottom)
+					glf->fm->y = position.y;
+				else if(glf->valign == vertical_align::center)
+					glf->fm->y = position.y + (metrics.rows_size.addr[i] - glf->fm->height) / 2;
+				else glf->fm->y = position.y + metrics.rows_size.addr[i] - glf->fm->height;
+			}
 			position.x += int32(metrics.columns_size.addr[j]);
 		}
 		position.x = content_viewport.position.x;
@@ -314,6 +323,7 @@ void grid_layout_data::render(frame *fm, vector<int32, 2> point, bitmap_processo
 	else yscroll.data.viewport_offset = 0;
 	for(uint64 i = 0; i < frames.rows * frames.columns; i++)
 	{
+		if(frames.addr[i].fm == nullptr) continue;
 		frames.addr[i].fm->x -= int32(xscroll.data.viewport_offset);
 		frames.addr[i].fm->y += int32(yscroll.data.viewport_offset);
 		if(frames.addr[i].fm->x < point.x + content_viewport.position.x + content_viewport.extent.x
