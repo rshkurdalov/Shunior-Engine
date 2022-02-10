@@ -397,6 +397,9 @@ void test_ui()
 	tf6->fm.height_desc = 1.0uirel;
 	gl->data.frames.at(2, 0) = grid_layout_frame(&tf6->fm, horizontal_align::center, vertical_align::center);
 
+	frame *fm1 = gl->data.frames.at(2, 1).fm,
+		*fm2 = gl->data.frames.at(2, 2).fm;
+
 	/*tf7->fm.width_desc = 1.0uirel;
 	tf7->fm.height_desc = 1.0uirel;
 	gl->data.frames.at(2, 1) = grid_layout_frame(&tf7->fm, horizontal_align::center, vertical_align::center);

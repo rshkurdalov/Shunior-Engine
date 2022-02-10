@@ -215,10 +215,10 @@ template<typename value_type> struct dynamic_matrix
 		value_type *new_addr = new value_type[rows * columns];
 		for(uint64 i = 0; i < rows; i++)
 			for(uint64 j = 0; j < insert_idx; j++)
-				new_addr[i * columns + j] = addr[i * columns + j];
+				new_addr[i * columns + j] = addr[i * (columns - insert_count) + j];
 		for(uint64 i = 0; i < rows; i++)
 			for(uint64 j = insert_idx; j < columns - insert_count; j++)
-				new_addr[i * columns + j + insert_count] = addr[i * columns + j];
+				new_addr[i * columns + j + insert_count] = addr[i * (columns - insert_count) + j];
 		if(addr != nullptr) delete[] addr;
 		addr = new_addr;
 	}
@@ -234,10 +234,10 @@ template<typename value_type> struct dynamic_matrix
 		value_type *new_addr = new value_type[rows * columns];
 		for(uint64 i = 0; i < rows; i++)
 			for(uint64 j = 0; j < remove_idx; j++)
-				new_addr[i * columns + j] = addr[i * columns + j];
+				new_addr[i * columns + j] = addr[i * (columns + remove_count) + j];
 		for(uint64 i = 0; i < rows; i++)
 			for(uint64 j = remove_idx; j < columns; j++)
-				new_addr[i * columns + j] = addr[i * columns + j + remove_count];
+				new_addr[i * columns + j] = addr[i * (columns + remove_count) + j + remove_count];
 		delete[] addr;
 		addr = new_addr;
 	}
