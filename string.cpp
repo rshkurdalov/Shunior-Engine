@@ -13,38 +13,19 @@ string_mapping_params *string_mapping()
 	return &smp;
 }
 
-bool operator<(const string &value1, const string &value2)
+compare_result compare_strings(const string &value1, const string &value2)
 {
 	compare_result result = compare_memory<char32>(
 		value1.addr,
 		value2.addr,
 		min(value1.size, value2.size) * sizeof(char32));
-	return result == compare_result::less
-		|| result == compare_result::equal && value1.size < value2.size;
-}
-
-bool operator==(const string &value1, const string &value2)
-{
-	return value1.size == value2.size
-		&& compare_memory<char32>(
-			value1.addr,
-			value2.addr,
-			min(value1.size, value2.size) * sizeof(char32)) == compare_result::equal;
-}
-
-bool operator!=(const string &value1, const string &value2)
-{
-	return !(value1 == value2);
-}
-
-bool operator>(const string &value1, const string &value2)
-{
-	compare_result result = compare_memory<char32>(
-		value1.addr,
-		value2.addr,
-		min(value1.size, value2.size) * sizeof(char32));
-	return result == compare_result::greater
-		|| result == compare_result::equal && value1.size > value2.size;
+	if(result == compare_result::equal)
+	{
+		if(value1.size == value2.size) return compare_result::equal;
+		else if(value1.size < value2.size) return compare_result::less;
+		else return compare_result::greater;
+	}
+	else return result;
 }
 
 string &operator<<(string &target, string &source)

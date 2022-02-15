@@ -9,7 +9,7 @@
 #include "set.h"
 #include "file.h"
 #include "fileset.h"
-#include "web_server.h"
+#include "network.h"
 
 void test_array()
 {
@@ -521,10 +521,58 @@ void test_fileset()
 	s.close();
 }
 
+array<byte> request_output;
 void test_web_server()
 {
-	web_server *ws = new web_server();
-	string uri;
-	uri << U"http://localhost:8000/";
-	ws->run(uri);
+	network_server *ws = new network_server();
+	ws->ip = ip_address(127, 0, 0, 1);
+	ws->port = 8000;
+	auto process_request = [](byte *input, uint64 input_size, byte **output, uint64 *output_size) -> bool
+	{
+		http_request request;
+		if(!request.setup(string_line<char8>((char8 *)(input), input_size))) return false;
+		http_response response;
+		response.version << U"HTTP/1.1";
+		if(compare_string_lines<char32>(string_line<char32>(request.query), string_line<char32>(U"/")) == compare_result::equal)
+		{
+			response.status_code << U"200";
+			response.status_message << U"OK";
+			response.content_type << U"text/html";
+			file f;
+			f.read_access = true;
+			f.write_access = true;
+			f.filename << U"C:\\Users\\rshkurdalov\\source\\repos\\WebApp\\index.html";
+			f.open();
+			response.data.insert_default(0, f.size);
+			f.position = 0;
+			f.read(f.size, response.data.addr);
+			
+		}
+		else if(compare_string_lines<char32>(string_line<char32>(request.query), string_line<char32>(U"/style.css")) == compare_result::equal)
+		{
+			response.status_code << U"200";
+			response.status_message << U"OK";
+			response.content_type << U"text/css";
+			file f;
+			f.read_access = true;
+			f.write_access = true;
+			f.filename << U"C:\\Users\\rshkurdalov\\source\\repos\\WebApp\\style.css";
+			f.open();
+			response.data.insert_default(0, f.size);
+			f.position = 0;
+			f.read(f.size, response.data.addr);
+		}
+		else
+		{
+			response.status_code << U"404";
+			response.status_message << U"Not Found";
+		}
+		request_output.clear();
+		response.compose(&request_output);
+		*output = request_output.addr;
+		*output_size = request_output.size;
+		return true;
+	};
+	ws->process_request = process_request;
+	ws->run();
 }

@@ -12,8 +12,8 @@
 #include <Windows.h>
 #include <Shlwapi.h>
 #pragma comment(lib, "Shlwapi.lib")
-#include <http.h>
-#pragma comment (lib, "httpapi.lib")
+#include <WinSock2.h>
+#pragma comment (lib, "ws2_32.lib")
 #endif
 
 #ifdef _WIN32
@@ -47,8 +47,9 @@ template<> struct key<window_data_win32>
 };
 
 array<window_data_win32> windows;
-bool http_initialized = false;
-array<web_server *> web_servers;
+bool network_initialized = false;
+WSADATA wsadata;
+array<network_server *> network_servers;
 UINT_PTR timer_id_win32 = 0;
 
 void __stdcall timer_proc_win32(HWND hwnd, UINT msg, UINT_PTR id, DWORD sys_time)
@@ -323,159 +324,18 @@ vector<uint32, 2> os_window_content_size(window *wnd)
 #endif
 }
 
-DWORD SendHttpResponse(
-    HANDLE hReqQueue,
-    PHTTP_REQUEST pRequest,
-    USHORT StatusCode,
-    PSTR pReason,
-    PSTR pEntityString)
-{
-    HTTP_RESPONSE response;
-    HTTP_DATA_CHUNK dataChunk;
-    DWORD result;
-    DWORD bytesSent;
-
-    RtlZeroMemory(&response, sizeof(response));
-	response.StatusCode = StatusCode;
-	response.pReason = pReason;
-	response.ReasonLength = strlen(pReason);
-
-	response.Headers.KnownHeaders[HttpHeaderContentType].pRawValue = "text/html";
-    response.Headers.KnownHeaders[HttpHeaderContentType].RawValueLength = USHORT(strlen("text/html")); 
-   
-    if(pEntityString)
-    {
-        dataChunk.DataChunkType = HttpDataChunkFromMemory;
-        dataChunk.FromMemory.pBuffer = pEntityString;
-        dataChunk.FromMemory.BufferLength = ULONG(strlen(pEntityString));
-
-        response.EntityChunkCount = 1;
-        response.pEntityChunks = &dataChunk;
-    }
-
-    // 
-    // Because the entity body is sent in one call, it is not
-    // required to specify the Content-Length.
-    //
-    
-    result = HttpSendHttpResponse(
-		hReqQueue,
-		pRequest->RequestId,
-		0,
-		&response,
-		NULL,
-		&bytesSent,
-		NULL,
-		0,
-		NULL,
-		NULL); 
-
-    return result;
-}
-
 void os_message_loop()
 {
 #ifdef _WIN32
-	/*ULONG result;
-    HTTP_REQUEST_ID requestId;
-    DWORD bytesRead;
-    PHTTP_REQUEST pRequest;
-    byte *pRequestBuffer;
-    ULONG RequestBufferLength;
-
-    RequestBufferLength = sizeof(HTTP_REQUEST) + 2048;
-    pRequestBuffer = new byte[RequestBufferLength];
-    pRequest = PHTTP_REQUEST(pRequestBuffer);
-
-    HTTP_SET_NULL_ID(&requestId);
-
-    while(true)
-    {
-        RtlZeroMemory(pRequest, RequestBufferLength);
-        result = HttpReceiveHttpRequest(
-			HANDLE(web_servers.addr[0]->handler),
-			requestId,
-			0,
-			pRequest,
-			RequestBufferLength,
-			&bytesRead,
-			NULL);
-
-		if(result == NO_ERROR)
-        {
-            switch(pRequest->Verb)
-            {
-                case HttpVerbGET:
-				{
-                    result = SendHttpResponse(
-						HANDLE(web_servers.addr[0]->handler),
-						pRequest,
-						200,
-						PSTR("OK"),
-						PSTR("Hey! You hit the server \r\n"));
-                    break;
-				}
-                case HttpVerbPOST:
-				{
-                    //result= SendHttpPostResponse(HANDLE(web_servers.addr[0]->handler), pRequest);
-                    break;
-				}
-                default:
-                    result = SendHttpResponse(
-						HANDLE(web_servers.addr[0]->handler),
-						pRequest,
-						503,
-						PSTR("Not Implemented"),
-						NULL);
-                    break;
-            }
-            if(result != NO_ERROR) break;
-            HTTP_SET_NULL_ID(&requestId);
-        }
-        else if(result == ERROR_MORE_DATA)
-        {
-            //
-            // The input buffer was too small to hold the request
-            // headers. Increase the buffer size and call the 
-            // API again. 
-            //
-            // When calling the API again, handle the request
-            // that failed by passing a RequestID.
-            //
-            // This RequestID is read from the old buffer.
-            //
-            requestId = pRequest->RequestId;
-
-            //
-            // Free the old buffer and allocate a new buffer.
-            //
-            
-			RequestBufferLength = bytesRead;
-            FREE_MEM( pRequestBuffer );
-            pRequestBuffer = (PCHAR) ALLOC_MEM( RequestBufferLength );
-
-            if (pRequestBuffer == NULL)
-            {
-                result = ERROR_NOT_ENOUGH_MEMORY;
-                break;
-            }
-
-            pRequest = (PHTTP_REQUEST)pRequestBuffer;
-
-        }
-        else if(result == ERROR_CONNECTION_INVALID && !HTTP_IS_NULL_ID(&requestId))
-        {
-            // The TCP connection was corrupted by the peer when
-            // attempting to handle a request with more buffer. 
-            // Continue to the next request.
-            
-            HTTP_SET_NULL_ID(&requestId);
-        }
-        else break;
-
-    }
-    delete[] pRequestBuffer;*/
-
+	if(!network_initialized)
+	{ 
+		WSAStartup(MAKEWORD(2, 0), &wsadata);
+		network_initialized = true;
+	}
+	SOCKET client;
+	byte *input, *output;
+	uint64 size = 5000, input_size, output_size;
+	input = new byte[size];
 	MSG msg = {};
 	while(true)
 	{
@@ -485,6 +345,22 @@ void os_message_loop()
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}
+
+		while(true)
+		{
+			client = accept(SOCKET(network_servers.addr[0]->handler), NULL, NULL);
+			if(client == INVALID_SOCKET) break;
+			input_size = (recv(client, (char *)(input), int(size), 0));
+			if(input_size != SOCKET_ERROR)
+			{
+				if(network_servers.addr[0]->process_request(input, input_size, &output, &output_size))
+				{
+					send(client, (char *)(output), int(output_size), 0);
+				}
+			}
+			closesocket(client);
+		}
+
 		Sleep(5);
 	}
 #endif
@@ -861,35 +737,38 @@ bool os_delete_file(string &filename)
 #endif
 }
 
-void os_regiser_web_server(web_server *ws)
+void os_regiser_web_server(network_server *ws)
 {
 #ifdef _WIN32
-	if(!http_initialized)
+	if(!network_initialized)
 	{ 
-		HttpInitialize(
-			HTTPAPI_VERSION_1,
-			HTTP_INITIALIZE_SERVER,
-			NULL);
-		http_initialized = true;
+		WSAStartup(MAKEWORD(2, 0), &wsadata);
+		network_initialized = true;
 	}
-	HttpCreateHttpHandle(PHANDLE(&ws->handler), 0);
-	char16 *str_win32 = create_u16sz(ws->uri);
-	HttpAddUrl(HANDLE(ws->handler), (wchar_t *)(str_win32), NULL);
-	delete[] str_win32;
-	web_servers.push(ws);
+	ws->handler = (void *)(socket(AF_INET, SOCK_STREAM, IPPROTO_TCP));
+	sockaddr_in socket_addr;
+	socket_addr.sin_family = AF_INET;
+	socket_addr.sin_addr.S_un.S_addr = INADDR_ANY;
+	socket_addr.sin_port = htons(ws->port);
+	u_long blocking_mode = 1;
+	ioctlsocket(SOCKET(ws->handler), FIONBIO, &blocking_mode);
+	bind(SOCKET(ws->handler), (sockaddr *)(&socket_addr), sizeof(socket_addr));
+	listen(SOCKET(ws->handler), 1);
+	ws->state = network_server_state::running;
+	network_servers.push(ws);
 #endif
 }
 
-void os_unregister_web_server(web_server *ws)
+void os_unregister_web_server(network_server *ws)
 {
 #ifdef _WIN32
-	char16 *str_win32 = create_u16sz(ws->uri);
-	HttpRemoveUrl(HANDLE(ws->handler), (wchar_t *)(str_win32));
-	delete[] str_win32;
-	CloseHandle(HANDLE(ws->handler));
-	for(uint64 i = 0; i < web_servers.size; i++)
-		if(web_servers.addr[i] == ws)
-			web_servers.remove(i);
+	ws->state = network_server_state::inactive;
+	for(uint64 i = 0; i < network_servers.size; i++)
+		if(network_servers.addr[i] == ws)
+		{
+			network_servers.remove(i);
+			return;
+		}
 #endif
 }
 

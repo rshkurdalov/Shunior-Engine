@@ -11,8 +11,14 @@ template<typename char_type> struct string_line
 
 	string_line() {}
 
+	string_line(const string &str) : addr(str.addr), length(str.size) {}
+
+	template<uint64 size> string_line(const char_type (&str)[size])
+		: addr(const_cast<char_type *>(str)), length(size - 1) {}
+
 	string_line(const char_type *addr, uint64 length)
 		: addr(const_cast<char_type *>(addr)), length(length) {}
+
 };
 
 struct string_mapping_params
@@ -25,10 +31,22 @@ struct string_mapping_params
 
 string_mapping_params *string_mapping();
 
-bool operator<(const string &value1, const string &value2);
-bool operator==(const string &value1, const string &value2);
-bool operator!=(const string &value1, const string &value2);
-bool operator>(const string &value1, const string &value2);
+compare_result compare_strings(const string &value1, const string &value2);
+template<typename char_type>
+compare_result compare_string_lines(string_line<char_type> value1, string_line<char_type> value2)
+{
+	compare_result result = compare_memory<char32>(
+		value1.addr,
+		value2.addr,
+		min(value1.length, value2.length) * sizeof(char32));
+	if(result == compare_result::equal)
+	{
+		if(value1.length == value2.length) return compare_result::equal;
+		else if(value1.length < value2.length) return compare_result::less;
+		else return compare_result::greater;
+	}
+	else return result;
+}
 string &operator<<(string &target, string &source);
 string &operator<<(string &target, char32 ch);
 string &operator<<(string &target, const char8 *source);

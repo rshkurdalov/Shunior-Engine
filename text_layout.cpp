@@ -27,7 +27,8 @@ template<> struct key<glyph_data *>
 	bool operator<(const key &value) const
 	{
 		return code < value.code || code == value.code
-			&& (font_name < value.font_name || font_name == value.font_name
+			&& (compare_strings(font_name, value.font_name) == compare_result::less
+				|| compare_strings(font_name, value.font_name) == compare_result::equal
 			&& (size < value.size || size == value.size
 			&& (italic < value.italic || italic == value.italic
 			&& weight < value.weight)));

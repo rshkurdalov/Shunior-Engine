@@ -3,7 +3,7 @@
 #include "frame_templates.h"
 #include "text_layout.h"
 #include "file.h"
-#include "web_server.h"
+#include "network.h"
 
 void os_create_window(window *wnd);
 void os_destroy_window(window *wnd);
@@ -28,5 +28,5 @@ void os_resize_file(uint64 size, file *f);
 uint64 os_read_file(file *f, uint64 size, void *addr);
 uint64 os_write_file(file *f, void *addr, uint64 size);
 bool os_delete_file(string &filename);
-void os_regiser_web_server(web_server *ws);
-void os_unregister_web_server(web_server *ws);
+void os_regiser_web_server(network_server *ws);
+void os_unregister_web_server(network_server *ws);

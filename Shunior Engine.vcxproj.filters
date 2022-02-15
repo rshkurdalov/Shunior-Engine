@@ -91,7 +91,7 @@
     <ClCompile Include="file.cpp">
       <Filter>Исходные файлы\data</Filter>
     </ClCompile>
-    <ClCompile Include="web_server.cpp">
+    <ClCompile Include="network.cpp">
       <Filter>Исходные файлы\global</Filter>
     </ClCompile>
     <ClCompile Include="grid_layout.cpp">
@@ -171,7 +171,7 @@
     <ClInclude Include="fileset.h">
       <Filter>Исходные файлы\data</Filter>
     </ClInclude>
-    <ClInclude Include="web_server.h">
+    <ClInclude Include="network.h">
       <Filter>Исходные файлы\global</Filter>
     </ClInclude>
   </ItemGroup>
