@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+  <Type Name="array&lt;*&gt;">
+    <DisplayString>{{addr={addr} size={size} capacity={capacity}}}</DisplayString>
+    <Expand>
+      <Item Name="size">size</Item>
+      <Item Name="capacity">capacity</Item>
+      <ArrayItems>
+        <Size>size</Size>
+        <ValuePointer>addr</ValuePointer>
+      </ArrayItems>
+    </Expand>
+  </Type>
+
+  <Type Name="string">
+    <DisplayString>{addr, [size]s32}</DisplayString>
+    <Expand>
+      <Item Name="size">size</Item>
+      <Item Name="capacity">capacity</Item>
+      <ArrayItems>
+        <Size>size</Size>
+        <ValuePointer>addr</ValuePointer>
+      </ArrayItems>
+    </Expand>
+  </Type>
+</AutoVisualizer>
